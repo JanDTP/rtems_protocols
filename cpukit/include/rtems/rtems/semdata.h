@@ -22,7 +22,13 @@
 #include <rtems/score/coremutex.h>
 #include <rtems/score/coresem.h>
 #include <rtems/score/mrsp.h>
+#include <rtems/score/dpcp.h>
+#include <rtems/score/fmlps.h>
+#include <rtems/score/fmlpl.h>
+#include <rtems/score/hdga.h>
 #include <rtems/score/object.h>
+#include <rtems/score/dflpl.h>
+#include <rtems/score/mpcp.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,6 +76,12 @@ typedef struct {
 
 #if defined(RTEMS_SMP)
     MRSP_Control MRSP;
+    DPCP_Control DPCP;
+    FMLPS_Control FMLPS;
+    FMLPL_Control FMLPL;
+    DFLPL_Control DFLPL;
+    HDGA_Control HDGA;
+    MPCP_Control MPCP;
 #endif
   } Core_control;
 
@@ -78,7 +90,7 @@ typedef struct {
    *
    * @see Semaphore_Variant.
    */
-  unsigned int variant : 3;
+  unsigned int variant : 4;
 
   /**
    * @brief The semaphore thread queue discipline.

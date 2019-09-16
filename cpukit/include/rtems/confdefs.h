@@ -1996,6 +1996,60 @@ extern rtems_initialization_tasks_table Initialization_tasks[];
 
 /*
  * This macro is calculated to specify the memory required for
+ * Classic API Semaphores using FMLPL. This is only available in
+ * SMP configurations.
+ */
+#if !defined(RTEMS_SMP) || \
+  !defined(CONFIGURE_MAXIMUM_FMLPL_SEMAPHORES)
+  #define _CONFIGURE_MEMORY_FOR_FMLPL_SEMAPHORES 0
+#else
+  #define _CONFIGURE_MEMORY_FOR_FMLPL_SEMAPHORES \
+    CONFIGURE_MAXIMUM_FMLPL_SEMAPHORES * \
+      _Configure_From_workspace( \
+	sizeof(FMLPL_Control) + \
+	sizeof(RBTree_Node) * CONFIGURE_MAXIMUM_TASKS + \
+	sizeof(Priority_Control) * CONFIGURE_MAXIMUM_TASKS \
+      )
+#endif
+
+/*
+ * This macro is calculated to specify the memory required for
+ * Classic API Semaphores using DFLPL. This is only available in
+ * SMP configurations.
+ */
+#if !defined(RTEMS_SMP) || \
+  !defined(CONFIGURE_MAXIMUM_DFLPL_SEMAPHORES)
+  #define _CONFIGURE_MEMORY_FOR_DFLPL_SEMAPHORES 0
+#else
+  #define _CONFIGURE_MEMORY_FOR_DFLPL_SEMAPHORES \
+    CONFIGURE_MAXIMUM_DFLPL_SEMAPHORES * \
+      _Configure_From_workspace( \
+	sizeof(DFLPL_Control) + \
+	sizeof(RBTree_Node) * CONFIGURE_MAXIMUM_TASKS + \
+	sizeof(Priority_Control) * CONFIGURE_MAXIMUM_TASKS \
+      )
+#endif
+
+/*
+ * This macro is calculated to specify the memory required for
+ * Classic API Semaphores using HDGA. This is only available in
+ * SMP configurations.
+ */
+#if !defined(RTEMS_SMP) || \
+  !defined(CONFIGURE_MAXIMUM_HDGA_SEMAPHORES)
+  #define _CONFIGURE_MEMORY_FOR_HDGA_SEMAPHORES 0
+#else
+  #define _CONFIGURE_MEMORY_FOR_HDGA_SEMAPHORES \
+    CONFIGURE_MAXIMUM_HDGA_SEMAPHORES * \
+      _Configure_From_workspace( \
+	sizeof(HDGA_Control) + \
+	sizeof(RBTree_Node) * CONFIGURE_MAXIMUM_TASKS + \
+	sizeof(Ticket_Control) * CONFIGURE_MAXIMUM_TASKS \
+      )
+#endif
+
+/*
+ * This macro is calculated to specify the memory required for
  * Classic API Semaphores using MRSP. This is only available in
  * SMP configurations.
  */
@@ -2009,6 +2063,22 @@ extern rtems_initialization_tasks_table Initialization_tasks[];
         RTEMS_ARRAY_SIZE(_Scheduler_Table) * sizeof(Priority_Control) \
       )
 #endif
+
+/*
+ * This macro is calculated to specify the memory required for
+ * Classic API Semaphores using DPCP. This is only available in
+ * SMP configurations.
+ */
+  #if !defined(RTEMS_SMP) || \
+    !defined(CONFIGURE_MAXIMUM_MPCP_SEMAPHORES)
+  #define _CONFIGURE_MEMORY_FOR_MPCP_SEMAPHORES 0
+  #else
+  #define _CONFIGURE_MEMORY_FOR_MPCP_SEMAPHORES \
+      CONFIGURE_MAXIMUM_MPCP_SEMAPHORES * \
+        _Configure_From_workspace( \
+          RTEMS_ARRAY_SIZE(_Scheduler_Table) * sizeof(Priority_Control) \
+        )
+  #endif
 
 #ifndef CONFIGURE_MAXIMUM_MESSAGE_QUEUES
   /**
@@ -2508,6 +2578,10 @@ struct _reent *__getreent(void)
    _CONFIGURE_MEMORY_FOR_TASKS( \
      _CONFIGURE_POSIX_THREADS, _CONFIGURE_POSIX_THREADS) + \
    _CONFIGURE_MEMORY_FOR_MRSP_SEMAPHORES + \
+   _CONFIGURE_MEMORY_FOR_FMLPL_SEMAPHORES + \
+   _CONFIGURE_MEMORY_FOR_DFLPL_SEMAPHORES + \
+   _CONFIGURE_MEMORY_FOR_HDGA_SEMAPHORES + \
+   _CONFIGURE_MEMORY_FOR_MPCP_SEMAPHORES + \
    _CONFIGURE_MEMORY_FOR_POSIX_MESSAGE_QUEUES( \
      CONFIGURE_MAXIMUM_POSIX_MESSAGE_QUEUES) + \
    _CONFIGURE_MEMORY_FOR_POSIX_SEMAPHORES( \

@@ -150,6 +150,92 @@ typedef uint32_t   rtems_attribute;
  */
 #define RTEMS_MULTIPROCESSOR_RESOURCE_SHARING 0x00000100
 
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will use the Distributed Priority Ceiling Protocol.
+ *
+ *  @note The semaphore instance must be a binary semaphore.
+ */
+#define RTEMS_DISTRIBUTED_PRIORITY_CEILING 0x00004000
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will NOT use the Distributed Priority Ceiling Protocol.
+ */
+#define RTEMS_NO_DISTRIBUTED_PRIORITY_CEILING 0x00000000
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will NOT use the Flexible Multiprocessor Locking Protocol (short).
+ */
+#define RTEMS_NO_FLEXIBLE_MULTIPROCESSOR_LOCKING_SHORT 0x00000000
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will use the Flexible Multiprocessor Locking Protocol (short).
+ *
+ *  @note The semaphore instance must be a binary semaphore.
+ */
+#define RTEMS_FLEXIBLE_MULTIPROCESSOR_LOCKING_SHORT 0x00000200
+
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will NOT use the Flexible Multiprocessor Locking Protocol (long).
+ */
+#define RTEMS_NO_FLEXIBLE_MULTIPROCESSOR_LOCKING_LONG 0x00000000
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will use the Flexible Multiprocessor Locking Protocol (long).
+ *
+ *  @note The semaphore instance must be a binary semaphore.
+ */
+#define RTEMS_FLEXIBLE_MULTIPROCESSOR_LOCKING_LONG 0x00000400
+
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will NOT use the Distributed Flexible Locking Long.
+ */
+#define RTEMS_NO_DISTRIBUTED_FLEXIBLE_LOCKING_LONG 0x00000000
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will use the Distributed Flexible Locking Long.
+ *
+ *  @note The semaphore instance must be a binary semaphore.
+ */
+#define RTEMS_DISTRIBUTED_FLEXIBLE_LOCKING_LONG 0x00000800
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will NOT use the Hyperperiod Dependency Graph Approach.
+ */
+#define RTEMS_NO_HYPERPERIOD_DEPENDENCY_GRAPH_APPROACH 0x00000000
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will use the Hyperperiod Dependency Graph Approach.
+ *
+ *  @note The semaphore instance must be a binary semaphore.
+ */
+#define RTEMS_HYPERPERIOD_DEPENDENCY_GRAPH_APPROACH 0x00001000
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will NOT use the Multiprocessor Priority Ceiling Protocol.
+ */
+#define RTEMS_NO_MULTIPROCESSOR_PRIORITY_CEILING 0x00000000
+
+/**
+ *  This attribute constant indicates that the Classic API Semaphore instance
+ *  created will use the Multiprocessor Priority Ceiling Protocol.
+ *
+ *  @note The semaphore instance must be a binary semaphore.
+ */
+#define RTEMS_MULTIPROCESSOR_PRIORITY_CEILING 0x00002000
+
 /******************** RTEMS Barrier Specific Attributes ********************/
 
 /**

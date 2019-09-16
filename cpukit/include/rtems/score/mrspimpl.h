@@ -45,6 +45,14 @@ extern "C" {
 
 #define MRSP_TQ_OPERATIONS &_Thread_queue_Operations_priority_inherit
 
+RTEMS_INLINE_ROUTINE uint64_t _MRSP_Get_Nanoseconds( void )
+{
+  Timestamp_Control  snapshot_as_timestamp;
+  _TOD_Get_zero_based_uptime(&snapshot_as_timestamp);
+  return _Timestamp_Get_as_nanoseconds(&snapshot_as_timestamp);
+}
+
+
 /**
  * @brief Acquires critical accordingt to MrsP.
  *
@@ -252,6 +260,9 @@ RTEMS_INLINE_ROUTINE Status_Control _MRSP_Claim_ownership(
 {
   Status_Control   status;
   Per_CPU_Control *cpu_self;
+  uint64_t start, end;
+
+  start = _MRSP_Get_Nanoseconds();
 
   status = _MRSP_Raise_priority(
     mrsp,
@@ -270,7 +281,9 @@ RTEMS_INLINE_ROUTINE Status_Control _MRSP_Claim_ownership(
   _MRSP_Release( mrsp, queue_context );
   _Thread_Priority_and_sticky_update( executing, 1 );
   _Thread_Dispatch_enable( cpu_self );
-  return STATUS_SUCCESSFUL;
+
+  end = _MRSP_Get_Nanoseconds();
+  return end-start;
 }
 
 /**
@@ -347,6 +360,9 @@ RTEMS_INLINE_ROUTINE Status_Control _MRSP_Wait_for_ownership(
 {
   Status_Control status;
   Priority_Node  ceiling_priority;
+  uint64_t start, end, preq, postq;
+
+  start = _MRSP_Get_Nanoseconds();
 
   status = _MRSP_Raise_priority(
     mrsp,
@@ -364,13 +380,14 @@ RTEMS_INLINE_ROUTINE Status_Control _MRSP_Wait_for_ownership(
     queue_context,
     _Thread_queue_Deadlock_status
   );
+  preq = _MRSP_Get_Nanoseconds();
   status = _Thread_queue_Enqueue_sticky(
     &mrsp->Wait_queue.Queue,
     MRSP_TQ_OPERATIONS,
     executing,
     queue_context
   );
-
+  postq = _MRSP_Get_Nanoseconds();
   if ( status == STATUS_SUCCESSFUL ) {
     _MRSP_Replace_priority( mrsp, executing, &ceiling_priority );
   } else {
@@ -393,8 +410,9 @@ RTEMS_INLINE_ROUTINE Status_Control _MRSP_Wait_for_ownership(
     _Thread_Priority_and_sticky_update( executing, sticky_level_change );
     _Thread_Dispatch_enable( cpu_self );
   }
-
-  return status;
+  end = _MRSP_Get_Nanoseconds();
+  //return end-start-(postq-preq);
+  return 0;
 }
 
 /**
@@ -457,10 +475,13 @@ RTEMS_INLINE_ROUTINE Status_Control _MRSP_Surrender(
 )
 {
   Thread_queue_Heads *heads;
+  uint64_t start, end;
+  start = _MRSP_Get_Nanoseconds();
 
   if ( _MRSP_Get_owner( mrsp ) != executing ) {
     _ISR_lock_ISR_enable( &queue_context->Lock_context.Lock_context );
-    return STATUS_NOT_OWNER;
+   //return STATUS_NOT_OWNER;
+    return 0;
   }
 
   _MRSP_Acquire_critical( mrsp, queue_context );
@@ -478,18 +499,23 @@ RTEMS_INLINE_ROUTINE Status_Control _MRSP_Surrender(
     );
     _MRSP_Release( mrsp, queue_context );
     _Thread_Priority_and_sticky_update( executing, -1 );
+    end = _MRSP_Get_Nanoseconds();
     _Thread_Dispatch_enable( cpu_self );
-    return STATUS_SUCCESSFUL;
+
+    //return STATUS_SUCCESSFUL;
+    return end-start;
   }
 
-  _Thread_queue_Surrender_sticky(
+  end = _Thread_queue_Surrender_sticky(
     &mrsp->Wait_queue.Queue,
     heads,
     executing,
     queue_context,
     MRSP_TQ_OPERATIONS
   );
-  return STATUS_SUCCESSFUL;
+  //end = _MRSP_Get_Nanoseconds();
+  //return STATUS_SUCCESSFUL;
+  return end-start;
 }
 
 /**

@@ -54,6 +54,42 @@ rtems_status_code rtems_semaphore_flush( rtems_id id )
         &queue_context
       );
       return RTEMS_NOT_DEFINED;
+    case SEMAPHORE_VARIANT_DPCP:
+      _Thread_queue_Release(
+        &the_semaphore->Core_control.Wait_queue,
+        &queue_context
+      );
+      return RTEMS_NOT_DEFINED;
+    case SEMAPHORE_VARIANT_FMLPS:
+      _Thread_queue_Release(
+        &the_semaphore->Core_control.Wait_queue,
+        &queue_context
+      );
+      return RTEMS_NOT_DEFINED;
+    case SEMAPHORE_VARIANT_FMLPL:
+      _Thread_queue_Release(
+        &the_semaphore->Core_control.Wait_queue,
+        &queue_context
+      );
+      return RTEMS_NOT_DEFINED;
+    case SEMAPHORE_VARIANT_DFLPL:
+      _Thread_queue_Release(
+        &the_semaphore->Core_control.Wait_queue,
+        &queue_context
+      );
+      return RTEMS_NOT_DEFINED;
+    case SEMAPHORE_VARIANT_HDGA:
+      _Thread_queue_Release(
+        &the_semaphore->Core_control.Wait_queue,
+        &queue_context
+      );
+      return RTEMS_NOT_DEFINED;
+    case SEMAPHORE_VARIANT_MPCP:
+      _Thread_queue_Release(
+        &the_semaphore->Core_control.Wait_queue,
+        &queue_context
+      );
+      return RTEMS_NOT_DEFINED;
 #endif
     default:
       _Assert(

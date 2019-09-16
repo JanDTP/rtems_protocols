@@ -930,6 +930,21 @@ void _Thread_queue_Enqueue(
   Thread_queue_Context          *queue_context
 );
 
+void _Thread_queue_Enqueue2(
+  Thread_queue_Queue            *queue,
+  const Thread_queue_Operations *operations,
+  Thread_Control                *the_thread,
+  Thread_queue_Context          *queue_context,
+  Per_CPU_Control *cpu
+);
+
+void _Thread_queue_Enqueue_busy(
+  Thread_queue_Queue            *queue,
+  const Thread_queue_Operations *operations,
+  Thread_Control                *the_thread,
+  Thread_queue_Context          *queue_context
+);
+
 #if defined(RTEMS_SMP)
 /**
  * @brief Enqueues the thread on the thread queue and busy waits for dequeue.
@@ -954,6 +969,15 @@ void _Thread_queue_Enqueue(
  * @param[in, out] queue_context The thread queue context of the lock acquire.
  */
 Status_Control _Thread_queue_Enqueue_sticky(
+  Thread_queue_Queue            *queue,
+  const Thread_queue_Operations *operations,
+  Thread_Control                *the_thread,
+  Thread_queue_Context          *queue_context
+);
+#endif
+
+#if defined(RTEMS_SMP)
+Status_Control _Thread_queue_Enqueue_sticky_no_update(
   Thread_queue_Queue            *queue,
   const Thread_queue_Operations *operations,
   Thread_Control                *the_thread,
@@ -1002,7 +1026,7 @@ bool _Thread_queue_Extract_locked(
  * @param[in, out] the_thread The thread to extract.
  * @param[in, out] lock_context The lock context of the lock acquire.
  */
-void _Thread_queue_Unblock_critical(
+uint64_t _Thread_queue_Unblock_critical(
   bool                unblock,
   Thread_queue_Queue *queue,
   Thread_Control     *the_thread,
@@ -1055,7 +1079,7 @@ void _Thread_queue_Unblock_critical(
  * @param[in, out] the_thread The thread to extract.
  * @param[in, out] queue_context The thread queue context of the lock acquire.
  */
-void _Thread_queue_Extract_critical(
+uint64_t _Thread_queue_Extract_critical(
   Thread_queue_Queue            *queue,
   const Thread_queue_Operations *operations,
   Thread_Control                *the_thread,
@@ -1103,15 +1127,24 @@ void _Thread_queue_Extract_with_proxy(
  * @param queue_context The thread queue context of the lock acquire.
  * @param operations The thread queue operations.
  */
-void _Thread_queue_Surrender(
+uint64_t _Thread_queue_Surrender(
   Thread_queue_Queue            *queue,
   Thread_queue_Heads            *heads,
   Thread_Control                *previous_owner,
   Thread_queue_Context          *queue_context,
   const Thread_queue_Operations *operations
 );
-
 #if defined(RTEMS_SMP)
+void _Thread_queue_Surrender_and_Migrate(
+  Thread_queue_Queue            *queue,
+  Thread_queue_Heads            *heads,
+  Thread_Control                *previous_owner,
+  Thread_queue_Context          *queue_context,
+  const Thread_queue_Operations *operations,
+  Per_CPU_Control *cpu,
+  Priority_Node *priority
+);
+
 /**
  * @brief Surrenders the thread queue previously owned by the thread to the
  * first enqueued thread.
@@ -1132,12 +1165,24 @@ void _Thread_queue_Surrender(
  * @param queue_context The thread queue context of the lock acquire.
  * @param operations The thread queue operations.
  */
-void _Thread_queue_Surrender_sticky(
+uint64_t _Thread_queue_Surrender_sticky(
   Thread_queue_Queue            *queue,
   Thread_queue_Heads            *heads,
   Thread_Control                *previous_owner,
   Thread_queue_Context          *queue_context,
   const Thread_queue_Operations *operations
+);
+#endif
+
+#if defined(RTEMS_SMP)
+void _Thread_queue_Surrender_sticky_and_migrate(
+  Thread_queue_Queue            *queue,
+  Thread_queue_Heads            *heads,
+  Thread_Control                *previous_owner,
+  Thread_queue_Context          *queue_context,
+  const Thread_queue_Operations *operations,
+  Per_CPU_Control *cpu,
+  Priority_Node *priority
 );
 #endif
 
@@ -1470,6 +1515,8 @@ typedef struct {
 extern const Thread_queue_Operations _Thread_queue_Operations_default;
 
 extern const Thread_queue_Operations _Thread_queue_Operations_FIFO;
+
+extern const Thread_queue_Operations _Thread_queue_Operations_TICKET;
 
 extern const Thread_queue_Operations _Thread_queue_Operations_priority;
 

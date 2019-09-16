@@ -46,7 +46,45 @@ THREAD_QUEUE_OBJECT_ASSERT(
   Core_control.MRSP.Wait_queue,
   SEMAPHORE_CONTROL_MRSP
 );
+
+THREAD_QUEUE_OBJECT_ASSERT(
+  Semaphore_Control,
+  Core_control.MRSP.Wait_queue,
+  SEMAPHORE_CONTROL_DPCP
+);
+
+THREAD_QUEUE_OBJECT_ASSERT(
+  Semaphore_Control,
+  Core_control.FMLPS.Wait_queue,
+  SEMAPHORE_CONTROL_FMLPS
+);
+
+THREAD_QUEUE_OBJECT_ASSERT(
+  Semaphore_Control,
+  Core_control.FMLPL.Wait_queue,
+  SEMAPHORE_CONTROL_FMLPL
+);
+
+THREAD_QUEUE_OBJECT_ASSERT(
+  Semaphore_Control,
+  Core_control.DFLPL.Wait_queue,
+  SEMAPHORE_CONTROL_DFLPL
+);
+
+THREAD_QUEUE_OBJECT_ASSERT(
+  Semaphore_Control,
+  Core_control.HDGA.Wait_queue,
+  SEMAPHORE_CONTROL_HDGA
+);
+
+THREAD_QUEUE_OBJECT_ASSERT(
+  Semaphore_Control,
+  Core_control.MPCP.Wait_queue,
+  SEMAPHORE_CONTROL_MPCP
+);
 #endif
+
+
 
 rtems_status_code rtems_semaphore_obtain(
   rtems_id        id,
@@ -118,6 +156,54 @@ rtems_status_code rtems_semaphore_obtain(
         &queue_context
       );
       break;
+    case SEMAPHORE_VARIANT_DPCP:
+      status = _DPCP_Seize(
+        &the_semaphore->Core_control.DPCP,
+        executing,
+        wait,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_FMLPS:
+      status = _FMLPS_Seize(
+        &the_semaphore->Core_control.FMLPS,
+        executing,
+        wait,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_FMLPL:
+      status = _FMLPL_Seize(
+        &the_semaphore->Core_control.FMLPL,
+        executing,
+        wait,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_DFLPL:
+      status = _DFLPL_Seize(
+        &the_semaphore->Core_control.DFLPL,
+        executing,
+        wait,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_HDGA:
+      status = _HDGA_Seize(
+        &the_semaphore->Core_control.HDGA,
+        executing,
+        wait,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_MPCP:
+      status = _MPCP_Seize(
+        &the_semaphore->Core_control.MPCP,
+        executing,
+        wait,
+        &queue_context
+      );
+      break;
 #endif
     default:
       _Assert(
@@ -134,5 +220,6 @@ rtems_status_code rtems_semaphore_obtain(
       break;
   }
 
-  return _Status_Get( status );
+  //return _Status_Get( status );
+  return status;
 }

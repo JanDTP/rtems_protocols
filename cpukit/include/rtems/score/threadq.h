@@ -370,6 +370,7 @@ typedef struct _Thread_queue_Heads {
      * among the highest priority thread of each scheduler instance.
      */
     Chain_Control Fifo;
+    RBTree_Control Tree;
 
 #if !defined(RTEMS_SMP)
     /**

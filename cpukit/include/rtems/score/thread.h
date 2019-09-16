@@ -38,6 +38,7 @@
 #include <rtems/score/threadq.h>
 #include <rtems/score/timestamp.h>
 #include <rtems/score/watchdog.h>
+#include <rtems/score/ticket.h>
 
 #if defined(RTEMS_SMP)
 #include <rtems/score/processormask.h>
@@ -870,6 +871,8 @@ struct _Thread_Control {
    * @brief LIFO list of user extensions iterators.
    */
   struct User_extensions_Iterator *last_user_extensions_iterator;
+
+  Ticket_Node ticket;
 
   /**
    * @brief Variable length array of user extension pointers.

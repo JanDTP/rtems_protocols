@@ -120,6 +120,48 @@ rtems_status_code rtems_semaphore_obtain(
 );
 
 /**
+ * @brief RTEMS Obtain Ticket
+ *
+ * This routine implements the rtems_semaphore_ticket directive. It
+ * attempts to obtain a unit from the semaphore/thread associated with ID.
+ * Mainly used for the HDGA semaphore to set the thread order.
+ *
+ * @param[in] id is the semaphore id
+ * @param[in] tid is the thread id
+ * @param[in] position is the order_number/ticket_number of the thread for the
+ * HDGA semaphore
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
+ */
+rtems_status_code rtems_semaphore_ticket(
+  rtems_id       id,
+  rtems_id tid,
+  int position
+);
+
+/**
+ * @brief RTEMS Semaphore Set Processor
+ *
+ * Sets the synchronization processor for the DFLPL and DPCP semaphores. It
+ * attempts to obtain a unit from the semaphore associated with ID.
+ *
+ *
+ * @param[in] id is the semaphore id
+ * @param[in] position is the order_number/ticket_number of the thread for the
+ * HDGA semaphore
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
+ */
+rtems_status_code rtems_semaphore_set_processor(
+    rtems_id id,
+    int cpu
+);
+
+/**
  *  @brief RTEMS Semaphore Release
  *
  *  This routine implements the rtems_semaphore_release directive.  It

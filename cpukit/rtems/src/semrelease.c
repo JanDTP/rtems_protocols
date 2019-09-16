@@ -93,7 +93,50 @@ rtems_status_code rtems_semaphore_release( rtems_id id )
         &queue_context
       );
       break;
+    case SEMAPHORE_VARIANT_DPCP:
+      status = _DPCP_Surrender(
+        &the_semaphore->Core_control.DPCP,
+        executing,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_FMLPS:
+      status = _FMLPS_Surrender(
+        &the_semaphore->Core_control.FMLPS,
+        executing,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_FMLPL:
+      status = _FMLPL_Surrender(
+        &the_semaphore->Core_control.FMLPL,
+        executing,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_DFLPL:
+      status = _DFLPL_Surrender(
+        &the_semaphore->Core_control.DFLPL,
+        executing,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_HDGA:
+      status = _HDGA_Surrender(
+        &the_semaphore->Core_control.HDGA,
+        executing,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_MPCP:
+      status = _MPCP_Surrender(
+        &the_semaphore->Core_control.MPCP,
+        executing,
+        &queue_context
+      );
+      break;
 #endif
+
     default:
       _Assert( the_semaphore->variant == SEMAPHORE_VARIANT_COUNTING );
       status = _CORE_semaphore_Surrender(
@@ -105,5 +148,6 @@ rtems_status_code rtems_semaphore_release( rtems_id id )
       break;
   }
 
-  return _Status_Get( status );
+  //return _Status_Get( status );
+  return status;
 }

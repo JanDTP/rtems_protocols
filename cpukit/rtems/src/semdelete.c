@@ -68,6 +68,30 @@ rtems_status_code rtems_semaphore_delete(
     case SEMAPHORE_VARIANT_MRSP:
       status = _MRSP_Can_destroy( &the_semaphore->Core_control.MRSP );
       break;
+
+    case SEMAPHORE_VARIANT_DPCP:
+      status = _DPCP_Can_destroy( &the_semaphore->Core_control.DPCP );
+      break;
+
+    case SEMAPHORE_VARIANT_FMLPS:
+      status = _FMLPS_Can_destroy( &the_semaphore->Core_control.FMLPS );
+      break;
+
+    case SEMAPHORE_VARIANT_FMLPL:
+      status = _FMLPL_Can_destroy( &the_semaphore->Core_control.FMLPL);
+      break;
+
+    case SEMAPHORE_VARIANT_DFLPL:
+      status = _DFLPL_Can_destroy( &the_semaphore->Core_control.DFLPL);
+      break;
+
+    case SEMAPHORE_VARIANT_MPCP:
+      status = _MPCP_Can_destroy( &the_semaphore->Core_control.MPCP);
+      break;
+
+    case SEMAPHORE_VARIANT_HDGA:
+      status = _HDGA_Can_destroy( &the_semaphore->Core_control.HDGA);
+      break;
 #endif
     default:
       _Assert(
@@ -93,6 +117,30 @@ rtems_status_code rtems_semaphore_delete(
 #if defined(RTEMS_SMP)
     case SEMAPHORE_VARIANT_MRSP:
       _MRSP_Destroy( &the_semaphore->Core_control.MRSP, &queue_context );
+      break;
+
+    case SEMAPHORE_VARIANT_DPCP:
+      _DPCP_Destroy( &the_semaphore->Core_control.DPCP, &queue_context );
+      break;
+
+    case SEMAPHORE_VARIANT_FMLPS:
+      _FMLPS_Destroy( &the_semaphore->Core_control.FMLPS, &queue_context );
+      break;
+
+    case SEMAPHORE_VARIANT_FMLPL:
+      _FMLPL_Destroy( &the_semaphore->Core_control.FMLPL, &queue_context );
+      break;
+
+    case SEMAPHORE_VARIANT_DFLPL:
+      _DFLPL_Destroy( &the_semaphore->Core_control.DFLPL, &queue_context );
+      break;
+
+    case SEMAPHORE_VARIANT_MPCP:
+      _MPCP_Destroy( &the_semaphore->Core_control.MPCP, &queue_context );
+      break;
+
+    case SEMAPHORE_VARIANT_HDGA:
+      _HDGA_Destroy( &the_semaphore->Core_control.HDGA, &queue_context );
       break;
 #endif
     default:
