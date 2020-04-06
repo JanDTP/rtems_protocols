@@ -248,9 +248,6 @@ bool _Thread_Initialize(
     &the_thread->Real_priority
   );
 
-  the_thread->ticket.owner = the_thread;
-  the_thread->ticket.ticket = 0;
-
 #if defined(RTEMS_SMP)
   RTEMS_STATIC_ASSERT( THREAD_SCHEDULER_BLOCKED == 0, Scheduler_state );
   the_thread->Scheduler.home_scheduler = scheduler;

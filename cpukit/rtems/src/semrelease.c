@@ -121,13 +121,6 @@ rtems_status_code rtems_semaphore_release( rtems_id id )
         &queue_context
       );
       break;
-    case SEMAPHORE_VARIANT_HDGA:
-      status = _HDGA_Surrender(
-        &the_semaphore->Core_control.HDGA,
-        executing,
-        &queue_context
-      );
-      break;
     case SEMAPHORE_VARIANT_MPCP:
       status = _MPCP_Surrender(
         &the_semaphore->Core_control.MPCP,
@@ -148,6 +141,5 @@ rtems_status_code rtems_semaphore_release( rtems_id id )
       break;
   }
 
-  //return _Status_Get( status );
-  return status;
+  return _Status_Get( status );
 }

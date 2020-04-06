@@ -777,16 +777,13 @@ bool _Thread_queue_Extract_locked(
   return _Thread_queue_Make_ready_again( the_thread );
 }
 
-uint64_t _Thread_queue_Unblock_critical(
+void _Thread_queue_Unblock_critical(
   bool                unblock,
   Thread_queue_Queue *queue,
   Thread_Control     *the_thread,
   ISR_lock_Context   *lock_context
 )
 {
-  uint64_t endd;
-  Timestamp_Control  snapshot_as_timestamp;
-
   if ( unblock ) {
     Per_CPU_Control *cpu_self;
 
@@ -794,19 +791,14 @@ uint64_t _Thread_queue_Unblock_critical(
     _Thread_queue_Queue_release( queue, lock_context );
 
     _Thread_Remove_timer_and_unblock( the_thread, queue );
-    _TOD_Get_zero_based_uptime(&snapshot_as_timestamp);
-     endd =  _Timestamp_Get_as_nanoseconds(&snapshot_as_timestamp);
+
     _Thread_Dispatch_enable( cpu_self );
-    return endd;
   } else {
-      _TOD_Get_zero_based_uptime(&snapshot_as_timestamp);
-       endd =  _Timestamp_Get_as_nanoseconds(&snapshot_as_timestamp);
     _Thread_queue_Queue_release( queue, lock_context );
-return endd;
   }
 }
 
-uint64_t _Thread_queue_Extract_critical(
+void _Thread_queue_Extract_critical(
   Thread_queue_Queue            *queue,
   const Thread_queue_Operations *operations,
   Thread_Control                *the_thread,
@@ -821,14 +813,12 @@ uint64_t _Thread_queue_Extract_critical(
     the_thread,
     queue_context
   );
-  uint64_t endd;
-  endd = _Thread_queue_Unblock_critical(
+  _Thread_queue_Unblock_critical(
     unblock,
     queue,
     the_thread,
     &queue_context->Lock_context.Lock_context
   );
-  return endd;
 }
 
 void _Thread_queue_Extract( Thread_Control *the_thread )
@@ -867,7 +857,7 @@ void _Thread_queue_Extract( Thread_Control *the_thread )
   }
 }
 
-uint64_t _Thread_queue_Surrender(
+void _Thread_queue_Surrender(
   Thread_queue_Queue            *queue,
   Thread_queue_Heads            *heads,
   Thread_Control                *previous_owner,
@@ -878,8 +868,6 @@ uint64_t _Thread_queue_Surrender(
   Thread_Control  *new_owner;
   bool             unblock;
   Per_CPU_Control *cpu_self;
-  uint64_t end;
-  Timestamp_Control  snapshot_as_timestamp;
 
   _Assert( heads != NULL );
 
@@ -912,9 +900,7 @@ uint64_t _Thread_queue_Surrender(
   if ( unblock ) {
     _Thread_Remove_timer_and_unblock( new_owner, queue );
   }
-  end =  _Timestamp_Get_as_nanoseconds(&snapshot_as_timestamp);
   _Thread_Dispatch_enable( cpu_self );
-  return end;
 }
 
 void _Thread_queue_Surrender_and_Migrate(
@@ -972,7 +958,7 @@ void _Thread_queue_Surrender_and_Migrate(
 }
 
 #if defined(RTEMS_SMP)
-uint64_t _Thread_queue_Surrender_sticky(
+void _Thread_queue_Surrender_sticky(
   Thread_queue_Queue            *queue,
   Thread_queue_Heads            *heads,
   Thread_Control                *previous_owner,
@@ -982,8 +968,6 @@ uint64_t _Thread_queue_Surrender_sticky(
 {
   Thread_Control  *new_owner;
   Per_CPU_Control *cpu_self;
-  uint64_t endd;
-  Timestamp_Control  snapshot_as_timestamp;
   _Assert( heads != NULL );
 
   _Thread_queue_Context_clear_priority_updates( queue_context );
@@ -1004,10 +988,7 @@ uint64_t _Thread_queue_Surrender_sticky(
   _Thread_Priority_and_sticky_update( previous_owner, -1 );
   _Thread_Priority_and_sticky_update( new_owner, 0 );
 
-  _TOD_Get_zero_based_uptime(&snapshot_as_timestamp);
-   endd =  _Timestamp_Get_as_nanoseconds(&snapshot_as_timestamp);
   _Thread_Dispatch_enable( cpu_self );
-  return endd;
 }
 #endif
 

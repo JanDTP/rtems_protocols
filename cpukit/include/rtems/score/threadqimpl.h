@@ -1026,7 +1026,7 @@ bool _Thread_queue_Extract_locked(
  * @param[in, out] the_thread The thread to extract.
  * @param[in, out] lock_context The lock context of the lock acquire.
  */
-uint64_t _Thread_queue_Unblock_critical(
+void _Thread_queue_Unblock_critical(
   bool                unblock,
   Thread_queue_Queue *queue,
   Thread_Control     *the_thread,
@@ -1079,7 +1079,7 @@ uint64_t _Thread_queue_Unblock_critical(
  * @param[in, out] the_thread The thread to extract.
  * @param[in, out] queue_context The thread queue context of the lock acquire.
  */
-uint64_t _Thread_queue_Extract_critical(
+void _Thread_queue_Extract_critical(
   Thread_queue_Queue            *queue,
   const Thread_queue_Operations *operations,
   Thread_Control                *the_thread,
@@ -1127,7 +1127,7 @@ void _Thread_queue_Extract_with_proxy(
  * @param queue_context The thread queue context of the lock acquire.
  * @param operations The thread queue operations.
  */
-uint64_t _Thread_queue_Surrender(
+void _Thread_queue_Surrender(
   Thread_queue_Queue            *queue,
   Thread_queue_Heads            *heads,
   Thread_Control                *previous_owner,
@@ -1165,7 +1165,7 @@ void _Thread_queue_Surrender_and_Migrate(
  * @param queue_context The thread queue context of the lock acquire.
  * @param operations The thread queue operations.
  */
-uint64_t _Thread_queue_Surrender_sticky(
+void _Thread_queue_Surrender_sticky(
   Thread_queue_Queue            *queue,
   Thread_queue_Heads            *heads,
   Thread_Control                *previous_owner,

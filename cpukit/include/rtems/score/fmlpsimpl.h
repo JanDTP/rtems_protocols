@@ -32,14 +32,6 @@ extern "C" {
 // do nothing instead of helping.
 #define FMLPS_TQ_OPERATIONS &_Thread_queue_Operations_FIFO
 
-RTEMS_INLINE_ROUTINE uint64_t _FMLPS_Get_Nanoseconds( void )
-{
-  Timestamp_Control  snapshot_as_timestamp;
-  _TOD_Get_zero_based_uptime(&snapshot_as_timestamp);
-  return _Timestamp_Get_as_nanoseconds(&snapshot_as_timestamp);
-}
-
-
 RTEMS_INLINE_ROUTINE void _FMLPS_Acquire_critical(
   FMLPS_Control        *fmlps,
   Thread_queue_Context *queue_context
@@ -141,7 +133,7 @@ RTEMS_INLINE_ROUTINE void _FMLPS_Remove_priority(
 }
 
 RTEMS_INLINE_ROUTINE void _FMLPS_Replace_priority(
-  FMLPS_Control   *fmlps,
+  FMLPS_Control  *fmlps,
   Thread_Control *thread,
   Priority_Node  *ceiling_priority
 )
@@ -165,8 +157,6 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Claim_ownership(
 {
   Status_Control   status;
   Per_CPU_Control *cpu_self;
-  uint64_t start, end;
-  start = _FMLPS_Get_Nanoseconds();
 
   status = _FMLPS_Raise_priority(
     fmlps,
@@ -185,9 +175,7 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Claim_ownership(
   _FMLPS_Release( fmlps, queue_context );
   _Thread_Priority_and_sticky_update( executing, 1 );
   _Thread_Dispatch_enable( cpu_self );
-  end = _FMLPS_Get_Nanoseconds();
-  //return STATUS_SUCCESSFUL;
-  return (end-start);
+  return STATUS_SUCCESSFUL;
 }
 
 RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Initialize(
@@ -240,8 +228,6 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Wait_for_ownership(
 {
   Status_Control status;
   Priority_Node  ceiling_priority;
-  uint64_t start, end, preq, postq;
-  start = _FMLPS_Get_Nanoseconds();
 
   status = _FMLPS_Raise_priority(
     fmlps,
@@ -259,14 +245,12 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Wait_for_ownership(
     queue_context,
     _Thread_queue_Deadlock_status
   );
-  preq = _FMLPS_Get_Nanoseconds();
   status = _Thread_queue_Enqueue_sticky(
     &fmlps->Wait_queue.Queue,
     FMLPS_TQ_OPERATIONS,
     executing,
     queue_context
   );
-  postq = _FMLPS_Get_Nanoseconds();
 
   if ( status == STATUS_SUCCESSFUL ) {
     _FMLPS_Replace_priority( fmlps, executing, &ceiling_priority );
@@ -291,9 +275,7 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Wait_for_ownership(
     _Thread_Dispatch_enable( cpu_self );
   }
 
-  end = _FMLPS_Get_Nanoseconds();
-  //return STATUS_SUCCESSFUL;
-  return 1;
+  return STATUS_SUCCESSFUL;
 }
 
 RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Seize(
@@ -332,9 +314,6 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Surrender(
 )
 {
   Thread_queue_Heads *heads;
-  uint64_t start, end;
-  start = _FMLPS_Get_Nanoseconds();
-
   if ( _FMLPS_Get_owner( fmlps ) != executing ) {
     _ISR_lock_ISR_enable( &queue_context->Lock_context.Lock_context );
     return STATUS_NOT_OWNER;
@@ -355,19 +334,18 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Surrender(
     );
     _FMLPS_Release( fmlps, queue_context );
     _Thread_Priority_and_sticky_update( executing, -1 );
-    end = _FMLPS_Get_Nanoseconds();
     _Thread_Dispatch_enable( cpu_self );
-    return (end-start);
+    return RTEMS_SUCCESSFUL;
   }
 
-  end = _Thread_queue_Surrender_sticky(
+  _Thread_queue_Surrender_sticky(
     &fmlps->Wait_queue.Queue,
     heads,
     executing,
     queue_context,
     FMLPS_TQ_OPERATIONS
   );
-  return (end-start);
+  return RTEMS_SUCCESSFUL;
 }
 
 RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Can_destroy( FMLPS_Control *fmlps )

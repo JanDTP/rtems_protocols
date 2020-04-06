@@ -55,19 +55,6 @@ RTEMS_INLINE_ROUTINE void _DPCP_Migrate_Back(
 }
 
 /**
- * @brief Get the timestamps for the overhead measurements.
- *
- * @return The timestamp.
- *
- */
-RTEMS_INLINE_ROUTINE uint64_t _DPCP_Get_Nanoseconds( void )
-{
-  Timestamp_Control  snapshot_as_timestamp;
-  _TOD_Get_zero_based_uptime( &snapshot_as_timestamp );
-  return _Timestamp_Get_as_nanoseconds( &snapshot_as_timestamp );
-}
-
-/**
  * @brief Acquires critical according to DPCP.
  *
  * @param dpcp The DPCP control for the operation.
@@ -153,7 +140,7 @@ RTEMS_INLINE_ROUTINE Priority_Control _DPCP_Get_priority(
 
 RTEMS_INLINE_ROUTINE void _DPCP_Set_priority(
   DPCP_Control         *dpcp,
-  Priority_Control     priority_ceiling,
+  Priority_Control      priority_ceiling,
   Thread_queue_Context *queue_context
 )
 {
@@ -213,12 +200,10 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Claim_ownership(
   Thread_queue_Context *queue_context
 )
 {
-  uint64_t start, end;
   ISR_lock_Context  lock_context;
   Scheduler_Node   *scheduler_node;
   Per_CPU_Control  *cpu_self;
 
-  start = _DPCP_Get_Nanoseconds();
   _Thread_Wait_acquire_default_critical( executing, &lock_context );
   scheduler_node = _Thread_Scheduler_get_home_node( executing );
 
@@ -234,10 +219,8 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Claim_ownership(
   _DPCP_Release( dpcp, queue_context );
   _DPCP_Migrate( executing, dpcp );
   _Thread_Wait_release_default_critical( executing, &lock_context );
-  end = _DPCP_Get_Nanoseconds();
   _Thread_Dispatch_enable( cpu_self );
-  return ( end-start );
-  //return STATUS_SUCCESSFUL;
+  return STATUS_SUCCESSFUL;
 }
 
 /**
@@ -291,8 +274,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Wait_for_ownership(
   Thread_queue_Context *queue_context
 )
 {
-  uint64_t start, end, preq, postq;
-  start = _DPCP_Get_Nanoseconds();
  _Thread_queue_Context_set_thread_state(
    queue_context,
    STATES_WAITING_FOR_MUTEX
@@ -301,18 +282,13 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Wait_for_ownership(
    queue_context,
    _Thread_queue_Deadlock_status
  );
- preq = _DPCP_Get_Nanoseconds();
  _Thread_queue_Enqueue(
    &dpcp->Wait_queue.Queue,
    DPCP_TQ_OPERATIONS,
    executing,
    queue_context
  );
- postq = _DPCP_Get_Nanoseconds();
- end = _DPCP_Get_Nanoseconds();
- //return (end-start-(postq-preq));
- return 1;
- //return STATUS_SUCCESSFUL;
+ return STATUS_SUCCESSFUL;
 }
 
 /**
@@ -379,16 +355,13 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Surrender(
   ISR_lock_Context  lock_context;
   Per_CPU_Control  *cpu_self;
   Thread_Control   *new_owner;
-  uint64_t          start, end;
 
-  start = _DPCP_Get_Nanoseconds();
   _DPCP_Acquire_critical( dpcp, queue_context );
   cpu_self = _Thread_Dispatch_disable_critical( &queue_context->Lock_context.Lock_context );
   if (_DPCP_Get_owner( dpcp ) != executing) {
     _DPCP_Release( dpcp , queue_context );
     _Thread_Dispatch_enable( cpu_self );
-    return 2;
-	//return STATUS_NOT_OWNER;
+    return STATUS_NOT_OWNER;
   }
 
   _Thread_queue_Context_clear_priority_updates( queue_context );
@@ -423,11 +396,9 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Surrender(
   _Thread_Wait_acquire_default_critical( executing, &lock_context );
   _DPCP_Migrate_Back( executing, dpcp );
   _Thread_Wait_release_default_critical( executing, &lock_context );
-  end = _DPCP_Get_Nanoseconds();
   _Thread_Dispatch_enable( cpu_self );
 
-  return (end-start);
-  //return STATUS_SUCCESSFUL;
+  return STATUS_SUCCESSFUL;
 }
 
 /**

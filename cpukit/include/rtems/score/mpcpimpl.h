@@ -40,13 +40,6 @@ extern "C" {
 
 #define MPCP_TQ_OPERATIONS &_Thread_queue_Operations_priority
 
-RTEMS_INLINE_ROUTINE uint64_t _MPCP_Get_Nanoseconds( void )
-{
-  Timestamp_Control  snapshot_as_timestamp;
-  _TOD_Get_zero_based_uptime(&snapshot_as_timestamp);
-  return _Timestamp_Get_as_nanoseconds(&snapshot_as_timestamp);
-}
-
 RTEMS_INLINE_ROUTINE void _MPCP_Acquire_critical(
         MPCP_Control         *mpcp,
         Thread_queue_Context *queue_context
@@ -176,9 +169,6 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Claim_ownership(
     Status_Control   status;
     Per_CPU_Control *cpu_self;
 
-    uint64_t start, end;
-    start = _MPCP_Get_Nanoseconds();
-
     status = _MPCP_Raise_priority(
             mpcp,
             executing,
@@ -188,18 +178,16 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Claim_ownership(
 
     if ( status != STATUS_SUCCESSFUL ) {
         _MPCP_Release( mpcp, queue_context );
-        //return status;
-        return 11111111;
+        return status;
     }
 
     _MPCP_Set_owner( mpcp, executing );
     cpu_self = _Thread_queue_Dispatch_disable( queue_context );
     _MPCP_Release( mpcp, queue_context );
     _Thread_Priority_update( queue_context );
-    end = _MPCP_Get_Nanoseconds();
     _Thread_Dispatch_enable( cpu_self );
 
-    return (end-start);
+    return RTEMS_SUCCESSFUL;
 }
 
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Initialize(
@@ -282,8 +270,7 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Wait_for_ownership(
   }
   _MPCP_Replace_priority( mpcp, executing, &ceiling_priority );
 
-  //return status;
-  return 1;
+  return status;
 }
 
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Seize(
@@ -322,8 +309,6 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Surrender(
 )
 {
     Thread_queue_Heads *heads;
-    uint64_t start, end;
-    start = _MPCP_Get_Nanoseconds();
 
     if ( _MPCP_Get_owner( mpcp ) != executing ) {
         _ISR_lock_ISR_enable( &queue_context->Lock_context.Lock_context );
@@ -345,21 +330,18 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Surrender(
         );
         _MPCP_Release( mpcp, queue_context );
         _Thread_Priority_update( queue_context );
-        end =  _MPCP_Get_Nanoseconds();
         _Thread_Dispatch_enable( cpu_self );
-        //return STATUS_SUCCESSFUL;
-        return (end-start);
+        return STATUS_SUCCESSFUL;
     }
 
-    end = _Thread_queue_Surrender(
+    _Thread_queue_Surrender(
             &mpcp->Wait_queue.Queue,
             heads,
             executing,
             queue_context,
             MPCP_TQ_OPERATIONS
     );
-    //return STATUS_SUCCESSFUL;
-    return (end-start);
+    return STATUS_SUCCESSFUL;
 }
 
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Can_destroy( MPCP_Control *mpcp )

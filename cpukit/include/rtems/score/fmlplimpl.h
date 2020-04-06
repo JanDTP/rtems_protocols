@@ -39,13 +39,6 @@ extern "C" {
  */
 #define FMLPL_TQ_OPERATIONS &_Thread_queue_Operations_FIFO
 
-RTEMS_INLINE_ROUTINE uint64_t _FMLPL_Get_Nanoseconds( void )
-{
-  Timestamp_Control  snapshot_as_timestamp;
-  _TOD_Get_zero_based_uptime(&snapshot_as_timestamp);
-  return _Timestamp_Get_as_nanoseconds(&snapshot_as_timestamp);
-}
-
 RTEMS_INLINE_ROUTINE void _FMLPL_Acquire_critical(
   FMLPL_Control        *fmlpl,
   Thread_queue_Context *queue_context
@@ -98,9 +91,9 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Change_Owner_Priority(
   Thread_queue_Context *queue_context
 )
 {
-  Thread_Control   *owner;
-  ISR_lock_Context  lock_context;
-  Priority_Node    *priority_node;
+  Thread_Control  *owner;
+  ISR_lock_Context lock_context;
+  Priority_Node   *priority_node;
 
   priority_node = &( fmlpl->root_node );
   owner = _FMLPL_Get_owner( fmlpl );
@@ -117,8 +110,10 @@ RTEMS_INLINE_ROUTINE Priority_Control _FMLPL_Get_Min_Priority(
   FMLPL_Control *fmlpl
 )
 {
-  int i, fs;
+  int		   i;
+  int 		   fs;
   Priority_Control min_prio;
+
   min_prio = PRIORITY_DEFAULT_MAXIMUM;
   fs = fmlpl->first_free_slot;
     
@@ -246,9 +241,7 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Claim_ownership(
 
   ISR_lock_Context  lock_context;
   Priority_Node    *priority_node;
-  uint64_t start, end;
 
-  start = _FMLPL_Get_Nanoseconds();
   _FMLPL_Set_owner( fmlpl, executing );
   priority_node = &( fmlpl->root_node );
   _Thread_queue_Context_clear_priority_updates( queue_context );
@@ -257,15 +250,11 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Claim_ownership(
     priority_node,
     SCHEDULER_PRIORITY_MAP( _FMLPL_Get_Min_Priority( fmlpl ))
   );
-  if( _FMLPL_Get_Min_Priority != 255 ) { //???
-    _Thread_Priority_add( executing, priority_node, queue_context );
-  }
   _Thread_Wait_release_default_critical( executing, &lock_context );
 
-  end = _FMLPL_Get_Nanoseconds();
   _FMLPL_Release( fmlpl, queue_context );
 
-  return end-start;
+  return RTEMS_SUCCESSFUL;
 }
 
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Initialize(
@@ -302,8 +291,6 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Wait_for_ownership(
   Thread_queue_Context *queue_context
 )
 {
-  uint64_t start, end, preq, postq;
-  start = _FMLPL_Get_Nanoseconds();
   _FMLPL_add(fmlpl, executing, queue_context);
 
   _Thread_queue_Context_set_thread_state(
@@ -315,14 +302,12 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Wait_for_ownership(
     queue_context,
     _Thread_queue_Deadlock_status
   );
-  preq = _FMLPL_Get_Nanoseconds();
   _Thread_queue_Enqueue(
     &fmlpl->Wait_queue.Queue,
     FMLPL_TQ_OPERATIONS,
     executing,
     queue_context
   );
-  postq = _FMLPL_Get_Nanoseconds();
   _FMLPL_Acquire_critical( fmlpl, queue_context );
   Priority_Control new_high_prio;
   _FMLPL_remove( fmlpl );
@@ -340,9 +325,8 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Wait_for_ownership(
   _Thread_Priority_add( executing, priority_node, queue_context );
   _Thread_Wait_release_default_critical( executing, &lock_context );
   _FMLPL_Release( fmlpl, queue_context );
-  end = _FMLPL_Get_Nanoseconds();
-  //return (end-start-(postq-preq));
-  return 1;
+
+  return RTEMS_SUCCESSFUL;
 }
 
 
@@ -375,8 +359,6 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Seize(
   return status;
 }
 
-
-
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Surrender(
   FMLPL_Control        *fmlpl,
   Thread_Control       *executing,
@@ -387,9 +369,7 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Surrender(
   ISR_lock_Context    lock_context;
   Priority_Node      *priority_node;
   Per_CPU_Control    *cpu_self;
-  uint64_t            start, end;
 
-  start = _FMLPL_Get_Nanoseconds();
   priority_node = &(fmlpl->root_node);
   _Thread_queue_Context_clear_priority_updates( queue_context );
   _Thread_Wait_acquire_default_critical( executing, &lock_context );
@@ -412,20 +392,19 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Surrender(
     _FMLPL_Release( fmlpl, queue_context );
     _Thread_queue_Context_clear_priority_updates(queue_context);
     _Thread_Priority_update(queue_context);
-    end = _FMLPL_Get_Nanoseconds();
     _Thread_Dispatch_enable( cpu_self );
-    return end-start;
+    return RTEMS_SUCCESSFUL;
   }
 
-  end = _Thread_queue_Surrender(
+  _Thread_queue_Surrender(
     &fmlpl->Wait_queue.Queue,
     heads,
     executing,
     queue_context,
     FMLPL_TQ_OPERATIONS
   );
-  //end = _FMLPL_Get_Nanoseconds();
-  return end-start;
+
+  return RTEMS_SUCCESSFUL;
 }
 
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Can_destroy(

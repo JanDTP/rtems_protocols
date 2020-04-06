@@ -25,18 +25,6 @@ extern "C" {
  */
 
 #define DFLPL_TQ_OPERATIONS &_Thread_queue_Operations_FIFO
-/**
- * @brief Gets the timestamps for our overhead measurements
- *
- * @return the timestamp
- *
- */
-RTEMS_INLINE_ROUTINE uint64_t _DFLPL_Get_Nanoseconds( void )
-{
-  Timestamp_Control  snapshot_as_timestamp;
-  _TOD_Get_zero_based_uptime(&snapshot_as_timestamp);
-  return _Timestamp_Get_as_nanoseconds(&snapshot_as_timestamp);
-}
 
 /**
  * @brief Migrates Thread to an synchronization processor. While keeping its home_scheduler instance
@@ -176,9 +164,9 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Change_Owner_Priority(
   Thread_queue_Context *queue_context
 )
 {
-  Thread_Control   *owner;
-  ISR_lock_Context  lock_context;
-  Priority_Node    *priority_node;
+  Thread_Control  *owner;
+  ISR_lock_Context lock_context;
+  Priority_Node   *priority_node;
 
   priority_node = &(dflpl->root_node);
   owner = _DFLPL_Get_owner(dflpl);
@@ -331,11 +319,8 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Claim_ownership(
   Per_CPU_Control *cpu_self;
   ISR_lock_Context lock_context;
   Priority_Node   *priority_node;
-  uint64_t start, end;
-
 
   cpu_self = _Thread_queue_Dispatch_disable( queue_context );
-  start = _DFLPL_Get_Nanoseconds();
   _DFLPL_Set_owner( dflpl, executing );
   priority_node = &(dflpl->root_node);
   _Thread_queue_Context_clear_priority_updates( queue_context );
@@ -345,9 +330,7 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Claim_ownership(
 
   _Thread_Wait_release_default_critical( executing, &lock_context );
   _DFLPL_Release( dflpl, queue_context );
-  end = _DFLPL_Get_Nanoseconds();
   _Thread_Dispatch_enable( cpu_self );
-  //return end-start;
   return STATUS_SUCCESSFUL;
 }
 
@@ -407,13 +390,11 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Wait_for_ownership(
   Thread_queue_Context *queue_context
 )
 {
-  Per_CPU_Control  *cpu_self;
-  ISR_lock_Context  lock_context;
-  Priority_Node    *priority_node;
-  Priority_Control  new_high_prio;
-  uint64_t start, end, preq, postq;
+  Per_CPU_Control *cpu_self;
+  ISR_lock_Context lock_context;
+  Priority_Node   *priority_node;
+  Priority_Control new_high_prio;
 
-  start = _DFLPL_Get_Nanoseconds();
   cpu_self = _Thread_Dispatch_disable_critical( &queue_context->Lock_context.Lock_context );
   _DFLPL_add( dflpl, executing, queue_context );
 
@@ -426,8 +407,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Wait_for_ownership(
     queue_context,
     _Thread_queue_Deadlock_status
   );
-  //_Thread_Dispatch_enable( cpu_self );
-  preq = _DFLPL_Get_Nanoseconds();
   _Thread_queue_Enqueue2(
     &dflpl->Wait_queue.Queue,
     DFLPL_TQ_OPERATIONS,
@@ -435,8 +414,7 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Wait_for_ownership(
     queue_context,
     cpu_self
   );
-  //finished waiting
-  postq = _DFLPL_Get_Nanoseconds();
+
   _DFLPL_Acquire_critical( dflpl, queue_context );
 
   _DFLPL_remove( dflpl );
@@ -444,8 +422,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Wait_for_ownership(
 
   priority_node = &( dflpl->root_node );
   _DFLPL_Release( dflpl, queue_context );
-  end = _DFLPL_Get_Nanoseconds();
-  //return (end-start-(postq-preq));
   return STATUS_SUCCESSFUL;
 }
 
@@ -491,18 +467,16 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Seize(
 
 /*Surrenders the sempahore. Migrating back and switch owner (which is also migrating) */
 RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Surrender(
-  DFLPL_Control *dflpl,
+  DFLPL_Control        *dflpl,
   Thread_Control       *executing,
   Thread_queue_Context *queue_context
 )
 {
-  uint64_t start, end;
   Thread_queue_Heads *heads;
   ISR_lock_Context    lock_context;
   Priority_Node      *priority_node;
   Per_CPU_Control    *cpu_self;
 
-  start = _DFLPL_Get_Nanoseconds();
   cpu_self = _Thread_Dispatch_disable_critical( &queue_context->Lock_context.Lock_context );
   priority_node =    &( dflpl->root_node );
   _Thread_queue_Context_clear_priority_updates( queue_context );
@@ -517,15 +491,13 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Surrender(
   heads = dflpl->Wait_queue.Queue.heads;
 
   if ( heads == NULL ) {
-    //cpu_self = _Thread_Dispatch_disable_critical( &queue_context->Lock_context.Lock_context);
     _DFLPL_Release( dflpl, queue_context );
     _Thread_queue_Context_clear_priority_updates( queue_context );
     _Thread_Wait_acquire_default_critical( executing, &lock_context );
     _DFLPL_Migrate_Back( executing, dflpl );
     _Thread_Wait_release_default_critical( executing, &lock_context );
-    end = _DFLPL_Get_Nanoseconds();
     _Thread_Dispatch_enable( cpu_self );
-    return end-start;
+    return RTEMS_SUCCESSFUL;
   }
 
   _Priority_Node_initialize(
@@ -543,18 +515,14 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Surrender(
     priority_node
   );
 
-  //cpu_self = _Thread_Dispatch_disable_critical(&queue_context->Lock_context.Lock_context);
   _Thread_Wait_acquire_default_critical( executing, &lock_context );
   _DFLPL_Migrate_Back( executing, dflpl );
   _Thread_Wait_release_default_critical( executing, &lock_context );
-  end = _DFLPL_Get_Nanoseconds();
   _Thread_Dispatch_enable( cpu_self );
 
-  //return end-start;
   return STATUS_SUCCESSFUL;
 }
 
-//Determines if we can delete the semaphore
 RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Can_destroy(
   DFLPL_Control *dflpl
 )
@@ -565,9 +533,8 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Can_destroy(
   return STATUS_SUCCESSFUL;
 }
 
-//Deletes the sempahore
 RTEMS_INLINE_ROUTINE void _DFLPL_Destroy(
-  DFLPL_Control *dflpl,
+  DFLPL_Control        *dflpl,
   Thread_queue_Context *queue_context
 )
 {

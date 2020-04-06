@@ -73,12 +73,6 @@ THREAD_QUEUE_OBJECT_ASSERT(
 
 THREAD_QUEUE_OBJECT_ASSERT(
   Semaphore_Control,
-  Core_control.HDGA.Wait_queue,
-  SEMAPHORE_CONTROL_HDGA
-);
-
-THREAD_QUEUE_OBJECT_ASSERT(
-  Semaphore_Control,
   Core_control.MPCP.Wait_queue,
   SEMAPHORE_CONTROL_MPCP
 );
@@ -188,14 +182,6 @@ rtems_status_code rtems_semaphore_obtain(
         &queue_context
       );
       break;
-    case SEMAPHORE_VARIANT_HDGA:
-      status = _HDGA_Seize(
-        &the_semaphore->Core_control.HDGA,
-        executing,
-        wait,
-        &queue_context
-      );
-      break;
     case SEMAPHORE_VARIANT_MPCP:
       status = _MPCP_Seize(
         &the_semaphore->Core_control.MPCP,
@@ -220,6 +206,5 @@ rtems_status_code rtems_semaphore_obtain(
       break;
   }
 
-  //return _Status_Get( status );
-  return status;
+  return _Status_Get( status );
 }

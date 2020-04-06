@@ -89,9 +89,6 @@ rtems_status_code rtems_semaphore_delete(
       status = _MPCP_Can_destroy( &the_semaphore->Core_control.MPCP);
       break;
 
-    case SEMAPHORE_VARIANT_HDGA:
-      status = _HDGA_Can_destroy( &the_semaphore->Core_control.HDGA);
-      break;
 #endif
     default:
       _Assert(
@@ -137,10 +134,6 @@ rtems_status_code rtems_semaphore_delete(
 
     case SEMAPHORE_VARIANT_MPCP:
       _MPCP_Destroy( &the_semaphore->Core_control.MPCP, &queue_context );
-      break;
-
-    case SEMAPHORE_VARIANT_HDGA:
-      _HDGA_Destroy( &the_semaphore->Core_control.HDGA, &queue_context );
       break;
 #endif
     default:

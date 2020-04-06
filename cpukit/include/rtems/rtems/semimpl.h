@@ -24,7 +24,6 @@
 #include <rtems/score/dpcpimpl.h>
 #include <rtems/score/fmlpsimpl.h>
 #include <rtems/score/fmlplimpl.h>
-#include <rtems/score/hdgaimpl.h>
 #include <rtems/score/dflplimpl.h>
 #include <rtems/score/mpcpimpl.h>
 
@@ -58,7 +57,6 @@ typedef enum {
   SEMAPHORE_VARIANT_FMLPS,
   SEMAPHORE_VARIANT_FMLPL,
   SEMAPHORE_VARIANT_DFLPL,
-  SEMAPHORE_VARIANT_HDGA,
   SEMAPHORE_VARIANT_MPCP
 #endif
 } Semaphore_Variant;

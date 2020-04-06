@@ -210,20 +210,6 @@ typedef uint32_t   rtems_attribute;
 
 /**
  *  This attribute constant indicates that the Classic API Semaphore instance
- *  created will NOT use the Hyperperiod Dependency Graph Approach.
- */
-#define RTEMS_NO_HYPERPERIOD_DEPENDENCY_GRAPH_APPROACH 0x00000000
-
-/**
- *  This attribute constant indicates that the Classic API Semaphore instance
- *  created will use the Hyperperiod Dependency Graph Approach.
- *
- *  @note The semaphore instance must be a binary semaphore.
- */
-#define RTEMS_HYPERPERIOD_DEPENDENCY_GRAPH_APPROACH 0x00001000
-
-/**
- *  This attribute constant indicates that the Classic API Semaphore instance
  *  created will NOT use the Multiprocessor Priority Ceiling Protocol.
  */
 #define RTEMS_NO_MULTIPROCESSOR_PRIORITY_CEILING 0x00000000

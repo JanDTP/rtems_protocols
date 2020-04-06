@@ -29,10 +29,10 @@ rtems_status_code rtems_semaphore_set_processor(
   int      cpu
 )
 {
-  Semaphore_Control    *the_semaphore;
-  Thread_queue_Context  queue_context;
-  ISR_lock_Context      lock_context;
-  Status_Control        status;
+  Semaphore_Control   *the_semaphore;
+  Thread_queue_Context queue_context;
+  ISR_lock_Context     lock_context;
+  Status_Control       status;
 
   the_semaphore = _Semaphore_Get( id, &queue_context );
 
@@ -65,8 +65,6 @@ rtems_status_code rtems_semaphore_set_processor(
     case SEMAPHORE_VARIANT_MRSP:
       status = RTEMS_NOT_DEFINED;
       break;
-#endif
-#if defined(RTEMS_SMP)
     case SEMAPHORE_VARIANT_DPCP:
      _DPCP_Set_CPU(
        &the_semaphore->Core_control.DPCP,
@@ -75,18 +73,12 @@ rtems_status_code rtems_semaphore_set_processor(
      );
      status = STATUS_SUCCESSFUL;
      break;
-#endif
-#if defined(RTEMS_SMP)
     case SEMAPHORE_VARIANT_FMLPS:
       status = RTEMS_NOT_DEFINED;
       break;
-#endif
-#if defined(RTEMS_SMP)
     case SEMAPHORE_VARIANT_FMLPL:
       status = RTEMS_NOT_DEFINED;
       break;
-#endif
-#if defined(RTEMS_SMP)
     case SEMAPHORE_VARIANT_DFLPL:
       _DFLPL_Set_CPU(
         &the_semaphore->Core_control.DFLPL,
@@ -96,13 +88,6 @@ rtems_status_code rtems_semaphore_set_processor(
       status = STATUS_SUCCESSFUL;
       break;
 #endif
-
-#if defined(RTEMS_SMP)
-    case SEMAPHORE_VARIANT_HDGA:
-      status = RTEMS_NOT_DEFINED;
-      break;
-#endif
-
     default:
       _Assert( the_semaphore->variant == SEMAPHORE_VARIANT_COUNTING );
       status = RTEMS_NOT_DEFINED;
@@ -110,5 +95,4 @@ rtems_status_code rtems_semaphore_set_processor(
   }
 
   return _Status_Get( status );
-  //return status;
 }
