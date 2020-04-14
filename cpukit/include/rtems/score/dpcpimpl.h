@@ -138,7 +138,7 @@ RTEMS_INLINE_ROUTINE void _DPCP_Set_priority(
   Thread_Control *owner;
   owner = _DPCP_Get_owner( dpcp );
   if ( owner != NULL ) {
-   //TODO
+   //Do nothing, thread executing right now
   } else {
     dpcp->Ceiling_priority.priority = priority_ceiling;
   }
@@ -236,7 +236,7 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Initialize(
 )
 {
   if ( initially_locked ) {
-      return STATUS_INVALID_NUMBER;
+    return STATUS_INVALID_NUMBER;
   }
 
   dpcp->cpu = _Per_CPU_Get_by_index( 1 );
@@ -261,21 +261,21 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Wait_for_ownership(
   Thread_queue_Context *queue_context
 )
 {
- _Thread_queue_Context_set_thread_state(
-   queue_context,
-   STATES_WAITING_FOR_MUTEX
- );
- _Thread_queue_Context_set_deadlock_callout(
-   queue_context,
-   _Thread_queue_Deadlock_status
- );
- _Thread_queue_Enqueue(
-   &dpcp->Wait_queue.Queue,
-   DPCP_TQ_OPERATIONS,
-   executing,
-   queue_context
- );
- return STATUS_SUCCESSFUL;
+  _Thread_queue_Context_set_thread_state(
+    queue_context,
+    STATES_WAITING_FOR_MUTEX
+  );
+  _Thread_queue_Context_set_deadlock_callout(
+    queue_context,
+    _Thread_queue_Deadlock_status
+  );
+  _Thread_queue_Enqueue(
+    &dpcp->Wait_queue.Queue,
+    DPCP_TQ_OPERATIONS,
+    executing,
+    queue_context
+  );
+  return STATUS_SUCCESSFUL;
 }
 
 /**
@@ -358,24 +358,21 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Surrender(
 
   if ( new_owner != NULL ) {
   #if defined(RTEMS_MULTIPROCESSING)
-	  if ( _Objects_Is_local_id( new_owner->Object.id ) )
+    if ( _Objects_Is_local_id( new_owner->Object.id ) )
   #endif
-	    {
-	    }
-
-  _Thread_queue_Extract_critical(
-    &dpcp->Wait_queue.Queue,
-    CORE_MUTEX_TQ_OPERATIONS,
-    new_owner,
-    queue_context
-  );
-
-  _Thread_Wait_acquire_default_critical( new_owner, &lock_context );
-  _DPCP_Migrate(new_owner, dpcp);
-  _Thread_Wait_release_default_critical( new_owner, &lock_context );
-
+    {
+    }
+    _Thread_queue_Extract_critical(
+      &dpcp->Wait_queue.Queue,
+      CORE_MUTEX_TQ_OPERATIONS,
+      new_owner,
+      queue_context
+    );
+    _Thread_Wait_acquire_default_critical( new_owner, &lock_context );
+    _DPCP_Migrate(new_owner, dpcp);
+    _Thread_Wait_release_default_critical( new_owner, &lock_context );
   } else {
-      _DPCP_Release( dpcp, queue_context );
+    _DPCP_Release( dpcp, queue_context );
   }
 
   _Thread_Wait_acquire_default_critical( executing, &lock_context );

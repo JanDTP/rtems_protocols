@@ -20,13 +20,12 @@ extern "C" {
  *
  * @{
  */
-
 #define HDGA_TQ_OPERATIONS &_Thread_queue_Operations_TICKET
 
 /**
- * @brief Locks the queue of the sempahore control block
+ * @brief Locks the queue of the semaphore control block
  *
- * @param hdga the sempahore control block
+ * @param hdga the semaphore control block
  * @param queue_context queue for locking
  *
  */
@@ -42,7 +41,7 @@ RTEMS_INLINE_ROUTINE void _HDGA_Acquire_critical(
  * @brief Gets the ticket number of the currently executing task
  *
  * @param executing the currently executing task
- * @return The ticket numbe rof the task
+ * @return The ticket number of the task
  *
  */
 RTEMS_INLINE_ROUTINE Ticket_Control _HDGA_Get_Ticket_number(
@@ -53,10 +52,10 @@ RTEMS_INLINE_ROUTINE Ticket_Control _HDGA_Get_Ticket_number(
 }
 
 /**
- * @brief Incements the current position in the queue by incrementing the
+ * @brief Increments the current position in the queue by incrementing the
  * 	pointer current_position
  *
- * @param hdga the sempahore control block
+ * @param hdga the semaphore control block
  *
  */
 RTEMS_INLINE_ROUTINE void _HDGA_Increment_Current_Position(
@@ -67,7 +66,7 @@ RTEMS_INLINE_ROUTINE void _HDGA_Increment_Current_Position(
   int current_pos = hdga->current_position;
 
   if ( current_pos == hdga->order_size ) {
-	  hdga->current_position = 0;
+    hdga->current_position = 0;
   }
 }
 
@@ -83,13 +82,14 @@ RTEMS_INLINE_ROUTINE bool _HDGA_Has_Valid_ticket(
   Thread_Control *executing
 )
 {
-  return executing->ticket.ticket == hdga->ticket_order[hdga->current_position];
+  return executing->ticket.ticket
+    == hdga->ticket_order[hdga->current_position];
 }
 
 /**
- * @brief Releases the queue of the sempahore control block
+ * @brief Releases the queue of the semaphore control block
  *
- * @param hdga the sempahore control block
+ * @param hdga the semaphore control block
  * @param queue_context queue for locking
  *
  */
@@ -106,7 +106,7 @@ RTEMS_INLINE_ROUTINE void _HDGA_Release(
  *
  * @param hdga the semaphore control block
  *
- * @return The owner of the sempahore control block
+ * @return The owner of the semaphore control block
  */
 RTEMS_INLINE_ROUTINE Thread_Control *_HDGA_Get_owner(
   const HDGA_Control *hdga
@@ -119,7 +119,7 @@ RTEMS_INLINE_ROUTINE Thread_Control *_HDGA_Get_owner(
  * @brief Sets the owner of the semaphore control block
  *
  * @param hdga the semaphore control block
- * @param executing The owner of the sempahore control block
+ * @param executing The owner of the semaphore control block
  *
  */
 RTEMS_INLINE_ROUTINE void _HDGA_Set_owner(
@@ -131,10 +131,10 @@ RTEMS_INLINE_ROUTINE void _HDGA_Set_owner(
 }
 
 /**
- * @brief Claims ownership of the HDGA sempahore
+ * @brief Claims ownership of the HDGA semaphore
  *
  * @param hdga the semaphore control block
- * @param executing The owner of the sempahore control block
+ * @param executing The owner of the semaphore control block
  * @param queue_context queue for locking
  */
 RTEMS_INLINE_ROUTINE Status_Control _HDGA_Claim_ownership(
@@ -155,7 +155,7 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Claim_ownership(
  * @param scheduler The scheduler for the operation.
  * @param queue_size the size of our ticket array
  * @param executing The currently executing thread.  Ignored in this method.
- * @param initially_locked Indicates whether the HDGA control shall be initally
+ * @param initially_locked Indicates whether the HDGA control shall be initially
  *      locked. If it is initially locked, this method returns STATUS_INVALID_NUMBER.
  *
  * @retval STATUS_SUCCESSFUL The operation succeeded.
@@ -169,7 +169,6 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Initialize(
   bool                     initially_locked
 )
 {
-
   hdga->order_size = queue_size;
   hdga->current_position = 0;
 
@@ -198,8 +197,8 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Initialize(
  * @param queue_context the thread queue context.
  *
  * @retval STATUS_SUCCESSFUL The operation succeeded.
- * @retval STATUS_DEADLOCK A deadlock occured.
- * @retval STATUS_TIMEOUT A timeout occured.
+ * @retval STATUS_DEADLOCK A deadlock occurred.
+ * @retval STATUS_TIMEOUT A timeout occurred.
  */
 
 RTEMS_INLINE_ROUTINE Status_Control _HDGA_Wait_for_ownership(
@@ -225,13 +224,12 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Wait_for_ownership(
   return STATUS_SUCCESSFUL;
 }
 
-
 /**
  * @brief Seizes the semaphore. Triggers the subroutines wait for semaphore and claim
  *
  * @param dflpl The DFLPL control for the operation.
  * @param executing The executing task
- * @param queue_context struct to secure sempahore access
+ * @param queue_context struct to secure semaphore access
  *
  * @retval STATUS_SUCCESSFUL The operation succeeded.
  * @retval STATUS_UNAVAVILABLE Seizing not possible.
@@ -244,8 +242,8 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Seize(
   Thread_queue_Context *queue_context
 )
 {
-  Status_Control  status;
   Thread_Control *owner;
+  Status_Control  status;
 
   _HDGA_Acquire_critical( hdga, queue_context );
 
@@ -286,12 +284,12 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Surrender(
 
   _HDGA_Acquire_critical( hdga, queue_context );
   //cpu_self = _Thread_Dispatch_disable_critical(&queue_context->Lock_context.Lock_context );
-  if (_HDGA_Get_owner( hdga ) != executing) {
-   _HDGA_Release( hdga , queue_context );
+  if ( _HDGA_Get_owner( hdga ) != executing ) {
+   _HDGA_Release( hdga, queue_context );
     return STATUS_NOT_OWNER;
   }
   _Thread_queue_Context_clear_priority_updates( queue_context );
-  _HDGA_Increment_Current_Position(hdga);
+  _HDGA_Increment_Current_Position( hdga );
 
   new_owner = _Thread_queue_First_locked(
                 &hdga->Wait_queue,
@@ -301,28 +299,25 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Surrender(
 
   if ( new_owner != NULL ) {
   #if defined(RTEMS_MULTIPROCESSING)
-  	if ( _Objects_Is_local_id( new_owner->Object.id ) )
+    if ( _Objects_Is_local_id( new_owner->Object.id ) )
   #endif
-  	{
-  	}
-	if ( !_HDGA_Has_Valid_ticket( hdga, new_owner ) ) {
-	  _HDGA_Set_owner( hdga, NULL );
-	  _HDGA_Release( hdga, queue_context );
-	  return STATUS_SUCCESSFUL;
-	}
-
-  	  _Thread_queue_Extract_critical(
-  	  &hdga->Wait_queue.Queue,
-	  HDGA_TQ_OPERATIONS,
-  	  new_owner,
-  	  queue_context
-  	);
-
-    } else {
-        _HDGA_Release( hdga, queue_context );
+    {
     }
-
-    return STATUS_SUCCESSFUL;
+    if ( !_HDGA_Has_Valid_ticket( hdga, new_owner ) ) {
+      _HDGA_Set_owner( hdga, NULL );
+      _HDGA_Release( hdga, queue_context );
+      return STATUS_SUCCESSFUL;
+    }
+    _Thread_queue_Extract_critical(
+      &hdga->Wait_queue.Queue,
+      HDGA_TQ_OPERATIONS,
+      new_owner,
+      queue_context
+    );
+  } else {
+    _HDGA_Release( hdga, queue_context );
+  }
+  return STATUS_SUCCESSFUL;
 }
 
 /**
@@ -338,9 +333,9 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Surrender(
 RTEMS_INLINE_ROUTINE Status_Control _HDGA_Can_destroy( HDGA_Control *hdga )
 {
   if ( _HDGA_Get_owner( hdga ) != NULL ||
-      _Thread_queue_First_locked(
-	&hdga->Wait_queue,
-	HDGA_TQ_OPERATIONS
+    _Thread_queue_First_locked(
+      &hdga->Wait_queue,
+      HDGA_TQ_OPERATIONS
   ) != NULL)  {
     return STATUS_RESOURCE_IN_USE;
   }
@@ -351,7 +346,7 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Can_destroy( HDGA_Control *hdga )
 /**
  * @brief Gives the task a ticket number and saves it in our ticket array
  * in the hdga control block. Originally it was possible to have the same task more than
- * one time in the queue, hence the weird if else conidtion.
+ * one time in the queue, hence the weird if else condition.
  *
  * @param[in, out] hdga The HDGA control to surrender the control of.
  * @param[in, out] executing The currently executing thread.
@@ -367,7 +362,7 @@ RTEMS_INLINE_ROUTINE Status_Control _HDGA_Set_thread(
   int posT = 0;
   _HDGA_Acquire_critical( hdga, queue_context );
 
-  if (_HDGA_Get_Ticket_number( executing ) == 0) {
+  if ( _HDGA_Get_Ticket_number( executing ) == 0 ) {
     posT = position + 1;
     executing->ticket.ticket = posT;
     hdga->ticket_order[position] = executing->ticket.ticket;
@@ -391,7 +386,7 @@ RTEMS_INLINE_ROUTINE void _HDGA_Destroy(
 {
   _HDGA_Release( hdga, queue_context );
   _Thread_queue_Destroy( &hdga->Wait_queue );
-  _Workspace_Free( hdga->ticket_order);
+  _Workspace_Free( hdga->ticket_order );
 }
 
 /** @} */

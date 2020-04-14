@@ -6,7 +6,6 @@
  * @brief Ticket Handler API
  */
 
-
 #ifndef _RTEMS_SCORE_TICKET_H
 #define _RTEMS_SCORE_TICKET_H
 
@@ -26,7 +25,6 @@ extern "C" {
  */
 typedef uint64_t Ticket_Control;
 
-
 #define TICKET_MINIMUM      0
 #define TICKET_DEFAULT_MAXIMUM      255
 
@@ -35,8 +33,6 @@ typedef uint64_t Ticket_Control;
  */
 #define TICKET_NODE_OF_NODE( node ) \
   RTEMS_CONTAINER_OF( node, Ticket_Node, Node.RBTree )
-
-
 
 typedef struct {
   /**
@@ -52,7 +48,6 @@ typedef struct {
    */
   Ticket_Control ticket;
 
-
   /**
    * @brief The owner of this ticket
    */
@@ -61,7 +56,7 @@ typedef struct {
 
 RTEMS_INLINE_ROUTINE void _Ticket_Initialize_one(
     RBTree_Control *tree,
-    Ticket_Node        *node
+    Ticket_Node    *node
 )
 {
   _RBTree_Initialize_one( tree, &node->Node.RBTree );
@@ -99,7 +94,6 @@ RTEMS_INLINE_ROUTINE bool _Ticket_Less(
   return *the_left < the_right->ticket;
 }
 
-
 /**
  * @brief Inserts ticket in to tree
  *
@@ -114,8 +108,8 @@ RTEMS_INLINE_ROUTINE bool _Ticket_Less(
  */
 RTEMS_INLINE_ROUTINE bool _Ticket_Plain_insert(
   RBTree_Control *tree,
-  Ticket_Node        *node,
-  Ticket_Control ticket
+  Ticket_Node    *node,
+  Ticket_Control  ticket
 )
 {
   return _RBTree_Insert_inline(
@@ -135,7 +129,7 @@ RTEMS_INLINE_ROUTINE bool _Ticket_Plain_insert(
  */
 RTEMS_INLINE_ROUTINE void _Ticket_Plain_extract(
   RBTree_Control *tree,
-  Ticket_Node        *node
+  Ticket_Node    *node
 )
 {
   _RBTree_Extract( tree, &node->Node.RBTree );
@@ -162,7 +156,7 @@ RTEMS_INLINE_ROUTINE RBTree_Node *_Ticket_Get_minimum_node(
  * @param executing the owner to set
  */
 RTEMS_INLINE_ROUTINE void _Ticket_Set_owner(
-  Ticket_Node        *node,
+  Ticket_Node    *node,
   Thread_Control *executing
 )
 {
@@ -173,10 +167,11 @@ RTEMS_INLINE_ROUTINE void _Ticket_Set_owner(
  * @brief Returns the owner of this ticket node
  *
  * @param node the ticket node to get the owner
+ *
  * @return executing the owner of this node
  */
 RTEMS_INLINE_ROUTINE Thread_Control *_Ticket_Get_owner(
-  Ticket_Node        *node
+  Ticket_Node *node
 )
 {
   return node->owner;
