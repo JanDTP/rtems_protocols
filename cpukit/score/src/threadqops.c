@@ -1449,6 +1449,109 @@ static Thread_Control *_Thread_queue_Priority_inherit_surrender(
   return first;
 }
 
+static void _Thread_queue_TICKET_do_initialize(
+  Thread_queue_Queue   *queue,
+  Thread_Control       *executing,
+  Thread_queue_Context *queue_context,
+  Thread_queue_Heads   *heads
+)
+{
+  _Ticket_Initialize_one(&heads->Heads.Tree, &executing->ticket);
+}
+
+static void _Thread_queue_TICKET_do_enqueue(
+  Thread_queue_Queue   *queue,
+  Thread_Control       *the_thread,
+  Thread_queue_Context *queue_context,
+  Thread_queue_Heads   *heads
+)
+{
+  _Ticket_Plain_insert(
+    &heads->Heads.Tree,
+    &the_thread->ticket,
+    the_thread->ticket.ticket
+  );
+}
+
+static void _Thread_queue_TICKET_do_extract(
+  Thread_queue_Queue   *queue,
+  Thread_queue_Heads   *heads,
+  Thread_Control       *current_or_previous_owner,
+  Thread_queue_Context *queue_context,
+  Thread_Control       *the_thread
+)
+{
+
+  _Ticket_Plain_extract(
+    &heads->Heads.Tree,
+    &the_thread->ticket
+  );
+}
+
+static void _Thread_queue_TICKET_enqueue(
+  Thread_queue_Queue   *queue,
+  Thread_Control       *the_thread,
+  Thread_queue_Context *queue_context
+)
+{
+  _Thread_queue_Queue_enqueue(
+    queue,
+    the_thread,
+    queue_context,
+    _Thread_queue_TICKET_do_initialize,
+    _Thread_queue_TICKET_do_enqueue
+  );
+}
+
+static void _Thread_queue_TICKET_extract(
+  Thread_queue_Queue   *queue,
+  Thread_Control       *the_thread,
+  Thread_queue_Context *queue_context
+)
+{
+  _Thread_queue_Queue_extract(
+    queue,
+    queue->heads,
+    NULL,
+    queue_context,
+    the_thread,
+    _Thread_queue_TICKET_do_extract
+  );
+}
+
+static Thread_Control *_Thread_queue_TICKET_first(
+  Thread_queue_Heads *heads
+)
+{
+  Ticket_Node *first;
+  first = TICKET_NODE_OF_NODE( _Ticket_Get_minimum_node( &heads->Heads.Tree ) );
+
+  return _Ticket_Get_owner(first);
+
+}
+
+static Thread_Control *_Thread_queue_TICKET_surrender(
+  Thread_queue_Queue   *queue,
+  Thread_queue_Heads   *heads,
+  Thread_Control       *previous_owner,
+  Thread_queue_Context *queue_context
+)
+{
+  Thread_Control *first;
+
+  first = _Thread_queue_TICKET_first( heads );
+  _Thread_queue_Queue_extract(
+    queue,
+    heads,
+    NULL,
+    queue_context,
+    first,
+    _Thread_queue_TICKET_do_extract
+  );
+
+  return first;
+}
+
 const Thread_queue_Operations _Thread_queue_Operations_default = {
   .priority_actions = _Thread_queue_Do_nothing_priority_actions,
   .extract = _Thread_queue_Do_nothing_extract
@@ -1489,4 +1592,12 @@ const Thread_queue_Operations _Thread_queue_Operations_priority_inherit = {
   .extract = _Thread_queue_Priority_inherit_extract,
   .surrender = _Thread_queue_Priority_inherit_surrender,
   .first = _Thread_queue_Priority_first
+};
+
+const Thread_queue_Operations _Thread_queue_Operations_TICKET = {
+  .priority_actions = _Thread_queue_Do_nothing_priority_actions,
+  .enqueue = _Thread_queue_TICKET_enqueue,
+  .extract = _Thread_queue_TICKET_extract,
+  .surrender = _Thread_queue_TICKET_surrender,
+  .first = _Thread_queue_TICKET_first
 };

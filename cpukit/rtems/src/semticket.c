@@ -24,15 +24,16 @@
 #include <rtems/rtems/semimpl.h>
 #include <rtems/rtems/statusimpl.h>
 
-rtems_status_code rtems_semaphore_set_processor(
-  rtems_id id,
-  int      cpu
-)
+rtems_status_code rtems_semaphore_ticket( rtems_id id, rtems_id tid, int position )
 {
-  Semaphore_Control   *the_semaphore;
-  Thread_queue_Context queue_context;
-  ISR_lock_Context     lock_context;
-  Status_Control       status;
+  Semaphore_Control    *the_semaphore;
+  Thread_queue_Context  queue_context;
+  ISR_lock_Context      lock_context;
+  Thread_Control       *executing;
+  Status_Control        status;
+
+  executing = _Thread_Get( tid, &lock_context );
+  _ISR_lock_ISR_enable( &lock_context );
 
   the_semaphore = _Semaphore_Get( id, &queue_context );
 
@@ -44,10 +45,15 @@ rtems_status_code rtems_semaphore_set_processor(
 #endif
   }
 
+  if ( executing == NULL ) {
+    return RTEMS_INVALID_ID;
+  }
+
   _Thread_queue_Context_set_MP_callout(
     &queue_context,
     _Semaphore_Core_mutex_mp_support
   );
+
   switch ( the_semaphore->variant ) {
     case SEMAPHORE_VARIANT_MUTEX_INHERIT_PRIORITY:
       status =  RTEMS_NOT_DEFINED;
@@ -65,32 +71,33 @@ rtems_status_code rtems_semaphore_set_processor(
     case SEMAPHORE_VARIANT_MRSP:
       status = RTEMS_NOT_DEFINED;
       break;
+
     case SEMAPHORE_VARIANT_DPCP:
-     _DPCP_Set_CPU(
-       &the_semaphore->Core_control.DPCP,
-       _Per_CPU_Get_by_index(cpu),
-       &queue_context
-     );
-     status = STATUS_SUCCESSFUL;
-     break;
+      status = RTEMS_NOT_DEFINED;
+      break;
+
     case SEMAPHORE_VARIANT_FMLPS:
       status = RTEMS_NOT_DEFINED;
       break;
+
     case SEMAPHORE_VARIANT_FMLPL:
       status = RTEMS_NOT_DEFINED;
       break;
+
     case SEMAPHORE_VARIANT_DFLPL:
-      _DFLPL_Set_CPU(
-        &the_semaphore->Core_control.DFLPL,
-	_Per_CPU_Get_by_index(cpu),
-	&queue_context
-      );
-      status = STATUS_SUCCESSFUL;
-      break;
-    case SEMAPHORE_VARIANT_HDGA:
       status = RTEMS_NOT_DEFINED;
       break;
+
+    case SEMAPHORE_VARIANT_HDGA:
+      status = _HDGA_Set_thread(
+		 &the_semaphore->Core_control.HDGA,
+		 executing,
+		 &queue_context,
+		 position
+	       );
+      break;
 #endif
+
     default:
       _Assert( the_semaphore->variant == SEMAPHORE_VARIANT_COUNTING );
       status = RTEMS_NOT_DEFINED;

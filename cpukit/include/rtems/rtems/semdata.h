@@ -25,6 +25,7 @@
 #include <rtems/score/dpcp.h>
 #include <rtems/score/fmlps.h>
 #include <rtems/score/fmlpl.h>
+#include <rtems/score/hdga.h>
 #include <rtems/score/object.h>
 #include <rtems/score/dflpl.h>
 #include <rtems/score/mpcp.h>
@@ -79,6 +80,7 @@ typedef struct {
     FMLPS_Control FMLPS;
     FMLPL_Control FMLPL;
     DFLPL_Control DFLPL;
+    HDGA_Control HDGA;
     MPCP_Control MPCP;
 #endif
   } Core_control;

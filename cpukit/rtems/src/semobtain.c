@@ -73,10 +73,18 @@ THREAD_QUEUE_OBJECT_ASSERT(
 
 THREAD_QUEUE_OBJECT_ASSERT(
   Semaphore_Control,
+  Core_control.HDGA.Wait_queue,
+  SEMAPHORE_CONTROL_HDGA
+);
+
+THREAD_QUEUE_OBJECT_ASSERT(
+  Semaphore_Control,
   Core_control.MPCP.Wait_queue,
   SEMAPHORE_CONTROL_MPCP
 );
 #endif
+
+
 
 rtems_status_code rtems_semaphore_obtain(
   rtems_id        id,
@@ -175,6 +183,14 @@ rtems_status_code rtems_semaphore_obtain(
     case SEMAPHORE_VARIANT_DFLPL:
       status = _DFLPL_Seize(
         &the_semaphore->Core_control.DFLPL,
+        executing,
+        wait,
+        &queue_context
+      );
+      break;
+    case SEMAPHORE_VARIANT_HDGA:
+      status = _HDGA_Seize(
+        &the_semaphore->Core_control.HDGA,
         executing,
         wait,
         &queue_context

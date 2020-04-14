@@ -2029,6 +2029,24 @@ extern rtems_initialization_tasks_table Initialization_tasks[];
 	sizeof(Priority_Control) * CONFIGURE_MAXIMUM_TASKS \
       )
 #endif
+/*
+ * This macro is calculated to specify the memory required for
+ * Classic API Semaphores using HDGA. This is only available in
+ * SMP configurations.
+ */
+#if !defined(RTEMS_SMP) || \
+  !defined(CONFIGURE_MAXIMUM_HDGA_SEMAPHORES)
+  #define _CONFIGURE_MEMORY_FOR_HDGA_SEMAPHORES 0
+#else
+  #define _CONFIGURE_MEMORY_FOR_HDGA_SEMAPHORES \
+    CONFIGURE_MAXIMUM_HDGA_SEMAPHORES * \
+      _Configure_From_workspace( \
+	sizeof(HDGA_Control) + \
+	sizeof(RBTree_Node) * CONFIGURE_MAXIMUM_TASKS + \
+	sizeof(Ticket_Control) * CONFIGURE_MAXIMUM_TASKS \
+      )
+#endif
+
 
 /*
  * This macro is calculated to specify the memory required for
@@ -2563,6 +2581,7 @@ struct _reent *__getreent(void)
    _CONFIGURE_MEMORY_FOR_FMLPL_SEMAPHORES + \
    _CONFIGURE_MEMORY_FOR_DFLPL_SEMAPHORES + \
    _CONFIGURE_MEMORY_FOR_MPCP_SEMAPHORES + \
+   _CONFIGURE_MEMORY_FOR_HDGA_SEMAPHORES + \
    _CONFIGURE_MEMORY_FOR_POSIX_MESSAGE_QUEUES( \
      CONFIGURE_MAXIMUM_POSIX_MESSAGE_QUEUES) + \
    _CONFIGURE_MEMORY_FOR_POSIX_SEMAPHORES( \

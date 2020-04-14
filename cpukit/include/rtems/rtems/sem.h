@@ -134,8 +134,28 @@ rtems_status_code rtems_semaphore_obtain(
  *         source of the error.
  */
 rtems_status_code rtems_semaphore_set_processor(
-    rtems_id id,
-    int cpu
+  rtems_id id,
+  int      cpu
+);
+
+/**
+ * @brief RTEMS Semaphore Set Ticket
+ *
+ * Sets ticket order for the hdga semaphore.
+ *
+ *
+ * @param[in] id is the semaphore id
+ * @param[in] id is the thread id
+ * @param[in] cpu is the number of the processor in the system
+ *
+ * @retval This method returns RTEMS_SUCCESSFUL if there was not an
+ *         error. Otherwise, a status code is returned indicating the
+ *         source of the error.
+ */
+rtems_status_code rtems_semaphore_ticket(
+  rtems_id id,
+  rtems_id tid,
+  int 	   position
 );
 
 /**
