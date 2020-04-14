@@ -40,6 +40,12 @@ extern "C" {
 
 #define MPCP_TQ_OPERATIONS &_Thread_queue_Operations_priority
 
+/**
+ * @brief Acquires critical according to MPCP.
+ *
+ * @param mpcp The MPCP control for the operation.
+ * @param queue_context The thread queue context.
+ */
 RTEMS_INLINE_ROUTINE void _MPCP_Acquire_critical(
         MPCP_Control         *mpcp,
         Thread_queue_Context *queue_context
@@ -48,6 +54,12 @@ RTEMS_INLINE_ROUTINE void _MPCP_Acquire_critical(
     _Thread_queue_Acquire_critical( &mpcp->Wait_queue, queue_context );
 }
 
+/**
+ * @brief Releases according to MPCP.
+ *
+ * @param mpcp The MPCP control for the operation.
+ * @param queue_context The thread queue context.
+ */
 RTEMS_INLINE_ROUTINE void _MPCP_Release(
   MPCP_Control         *mpcp,
   Thread_queue_Context *queue_context
@@ -56,6 +68,13 @@ RTEMS_INLINE_ROUTINE void _MPCP_Release(
     _Thread_queue_Release( &mpcp->Wait_queue, queue_context );
 }
 
+/**
+ * @brief Gets owner of the MPCP control.
+ *
+ * @param mpcp The MPCP control to get the owner from.
+ *
+ * @return The owner of the MPCP control.
+ */
 RTEMS_INLINE_ROUTINE Thread_Control *_MPCP_Get_owner(
         const MPCP_Control *mpcp
 )
@@ -63,6 +82,12 @@ RTEMS_INLINE_ROUTINE Thread_Control *_MPCP_Get_owner(
     return mpcp->Wait_queue.Queue.owner;
 }
 
+/**
+ * @brief Sets owner of the MPCP control.
+ *
+ * @param[out] mpcp The MPCP control to set the owner of.
+ * @param owner The desired new owner for @a mpcp.
+ */
 RTEMS_INLINE_ROUTINE void _MPCP_Set_owner(
         MPCP_Control   *mpcp,
         Thread_Control *owner
@@ -71,6 +96,14 @@ RTEMS_INLINE_ROUTINE void _MPCP_Set_owner(
     mpcp->Wait_queue.Queue.owner = owner;
 }
 
+/**
+ * @brief Gets priority of the MPCP control.
+ *
+ * @param mpcp The mpcp to get the priority from.
+ * @param scheduler The corresponding scheduler.
+ *
+ * @return The priority of the MPCP control.
+ */
 RTEMS_INLINE_ROUTINE Priority_Control _MPCP_Get_priority(
         const MPCP_Control      *mpcp,
         const Scheduler_Control *scheduler
@@ -82,6 +115,13 @@ RTEMS_INLINE_ROUTINE Priority_Control _MPCP_Get_priority(
     return mpcp ->ceiling_priorities[scheduler_index];
 }
 
+/**
+ * @brief Sets priority of the MPCP control
+ *
+ * @param[out] mpcp The MPCP control to set the priority of.
+ * @param scheduler The corresponding scheduler.
+ * @param new_priority The new priority for the MPCP control
+ */
 RTEMS_INLINE_ROUTINE void _MPCP_Set_priority(
         MPCP_Control            *mpcp,
         const Scheduler_Control *scheduler,
@@ -94,6 +134,19 @@ RTEMS_INLINE_ROUTINE void _MPCP_Set_priority(
     mpcp->ceiling_priorities[ scheduler_index ] = new_priority;
 }
 
+/**
+ * @brief Adds the priority to the given thread.
+ *
+ * @param mpcp The MPCP control for the operation.
+ * @param[in, out] thread The thread to add the priority node to.
+ * @param[out] priority_node The priority node to initialize and add to
+ *      the thread.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_MUTEX_CEILING_VIOLATED The wait priority of the thread
+ *      exceeds the ceiling priority.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Raise_priority(
         MPCP_Control         *mpcp,
         Thread_Control       *thread,
@@ -129,6 +182,13 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Raise_priority(
     return status;
 }
 
+/**
+ * @brief Removes the priority from the given thread.
+ *
+ * @param[in, out] The thread to remove the priority from.
+ * @param priority_node The priority node to remove from the thread
+ * @param queue_context The thread queue context.
+ */
 RTEMS_INLINE_ROUTINE void _MPCP_Remove_priority(
         Thread_Control       *thread,
         Priority_Node        *priority_node,
@@ -143,6 +203,14 @@ RTEMS_INLINE_ROUTINE void _MPCP_Remove_priority(
     _Thread_Wait_release_default_critical( thread, &lock_context );
 }
 
+/**
+ * @brief Replaces the given priority node with the ceiling priority of
+ *      the MPCP control.
+ *
+ * @param mpcp The mpcp control for the operation.
+ * @param[out] thread The thread to replace the priorities.
+ * @param ceiling_priority The node to be replaced.
+ */
 RTEMS_INLINE_ROUTINE void _MPCP_Replace_priority(
         MPCP_Control   *mpcp,
         Thread_Control *thread,
@@ -160,6 +228,17 @@ RTEMS_INLINE_ROUTINE void _MPCP_Replace_priority(
     _Thread_Wait_release_default( thread, &lock_context );
 }
 
+/**
+ * @brief Claims ownership of the MPCP control.
+ *
+ * @param mpcp The MPCP control to claim the ownership of.
+ * @param[in, out] executing The currently executing thread.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_MUTEX_CEILING_VIOLATED The wait priority of the executing
+ *      thread exceeds the ceiling priority.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Claim_ownership(
         MPCP_Control         *mpcp,
         Thread_Control       *executing,
@@ -190,6 +269,20 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Claim_ownership(
     return RTEMS_SUCCESSFUL;
 }
 
+/**
+ * @brief Initializes a MPCP control.
+ *
+ * @param[out] mpcp The MPCP control that is initialized.
+ * @param scheduler The scheduler for the operation.
+ * @param ceiling_priority
+ * @param executing The currently executing thread.  Ignored in this method.
+ * @param initially_locked Indicates whether the MPCP control shall be initally
+ *      locked. If it is initially locked, this method returns STATUS_INVALID_NUMBER.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_INVALID_NUMBER The MPCP control is initially locked.
+ * @retval STATUS_NO_MEMORY There is not enough memory to allocate.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Initialize(
         MPCP_Control            *mpcp,
         const Scheduler_Control *scheduler,
@@ -230,6 +323,19 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Initialize(
     return STATUS_SUCCESSFUL;
 }
 
+/**
+ * @brief Waits for the ownership of the MPCP control.
+ *
+ * @param[in, out] mpcp The MPCP control to get the ownership of.
+ * @param[in, out] executing The currently executing thread.
+ * @param queue_context the thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_MUTEX_CEILING_VIOLATED The wait priority of the
+ *      currently executing thread exceeds the ceiling priority.
+ * @retval STATUS_DEADLOCK A deadlock occured.
+ * @retval STATUS_TIMEOUT A timeout occured.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Wait_for_ownership(
   MPCP_Control         *mpcp,
   Thread_Control       *executing,
@@ -273,6 +379,20 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Wait_for_ownership(
   return status;
 }
 
+/**
+ * @brief Seizes the MPCP control.
+ *
+ * @param[in, out] mpcp The MPCP control to seize the control of.
+ * @param[in, out] executing The currently executing thread.
+ * @param wait Indicates whether the calling thread is willing to wait.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_MUTEX_CEILING_VIOLATED The wait priority of the executing
+ *      thread exceeds the ceiling priority.
+ * @retval STATUS_UNAVAILABLE The executing thread is already the owner of
+ *      the MPCP control.  Seizing it is not possible.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Seize(
         MPCP_Control         *mpcp,
         Thread_Control       *executing,
@@ -302,6 +422,16 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Seize(
     return status;
 }
 
+/**
+ * @brief Surrenders the MPCP control.
+ *
+ * @param[in, out] mpcp The MPCP control to surrender the control of.
+ * @param[in, out] executing The currently executing thread.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_NOT_OWNER The executing thread does not own the MPCP control.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Surrender(
         MPCP_Control         *mpcp,
         Thread_Control       *executing,
@@ -344,6 +474,16 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Surrender(
     return STATUS_SUCCESSFUL;
 }
 
+/**
+ * @brief Checks if the MPCP control can be destroyed.
+ *
+ * @param mpcp The MPCP control for the operation.
+ *
+ * @retval STATUS_SUCCESSFUL The MPCP is currently not used
+ *      and can be destroyed.
+ * @retval STATUS_RESOURCE_IN_USE The MPCP control is in use,
+ *      it cannot be destroyed.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _MPCP_Can_destroy( MPCP_Control *mpcp )
 {
     if ( _MPCP_Get_owner( mpcp ) != NULL ) {
@@ -353,6 +493,12 @@ RTEMS_INLINE_ROUTINE Status_Control _MPCP_Can_destroy( MPCP_Control *mpcp )
     return STATUS_SUCCESSFUL;
 }
 
+/**
+ * @brief Destroys the MPCP control
+ *
+ * @param[in, out] The mpcp that is about to be destroyed.
+ * @param queue_context The thread queue context.
+ */
 RTEMS_INLINE_ROUTINE void _MPCP_Destroy(
         MPCP_Control         *mpcp,
         Thread_queue_Context *queue_context

@@ -21,16 +21,14 @@ extern "C" {
  *
  * @{
  */
-
 #define DPCP_TQ_OPERATIONS &_Thread_queue_Operations_priority
 
 /**
- * @brief Migrates Thread to an synchronization processor. While keeping its home_scheduler instance
+ * @brief Migrates Thread to an synchronization processor.
  *
  * @param executing The executing Thread.
  * @param dpcp The semaphore control block.
  */
-
 RTEMS_INLINE_ROUTINE void _DPCP_Migrate(
   Thread_Control *executing,
   DPCP_Control   *dpcp
@@ -45,7 +43,6 @@ RTEMS_INLINE_ROUTINE void _DPCP_Migrate(
  * @param executing The executing Thread.
  * @param dpcp The semaphore control block.
  */
-
 RTEMS_INLINE_ROUTINE void _DPCP_Migrate_Back(
   Thread_Control *executing,
   DPCP_Control   *dpcp
@@ -60,7 +57,6 @@ RTEMS_INLINE_ROUTINE void _DPCP_Migrate_Back(
  * @param dpcp The DPCP control for the operation.
  * @param queue_context The thread queue context.
  */
-
 RTEMS_INLINE_ROUTINE void _DPCP_Acquire_critical(
   DPCP_Control         *dpcp,
   Thread_queue_Context *queue_context
@@ -75,7 +71,6 @@ RTEMS_INLINE_ROUTINE void _DPCP_Acquire_critical(
  * @param dpcp The DPCP control for the operation.
  * @param queue_context The thread queue context.
  */
-
 RTEMS_INLINE_ROUTINE void _DPCP_Release(
   DPCP_Control         *dpcp,
   Thread_queue_Context *queue_context
@@ -91,7 +86,6 @@ RTEMS_INLINE_ROUTINE void _DPCP_Release(
  *
  * @return The owner of the dpcp control.
  */
-
 RTEMS_INLINE_ROUTINE Thread_Control *_DPCP_Get_owner(
   const DPCP_Control *dpcp
 )
@@ -105,7 +99,6 @@ RTEMS_INLINE_ROUTINE Thread_Control *_DPCP_Get_owner(
  * @param[out] dpcp The DPCP control to set the owner of.
  * @param owner The desired new owner for @a dpcp.
  */
-
 RTEMS_INLINE_ROUTINE void _DPCP_Set_owner(
   DPCP_Control   *dpcp,
   Thread_Control *owner
@@ -115,13 +108,12 @@ RTEMS_INLINE_ROUTINE void _DPCP_Set_owner(
 }
 
 /**
- * @brief Gets priority of the DPCP control.
+ * @brief Gets ceiling priority of the DPCP control.
  *
  * @param dpcp The dpcp to get the priority from.
  *
  * @return The priority of the DPCP control.
  */
-
 RTEMS_INLINE_ROUTINE Priority_Control _DPCP_Get_priority(
   const DPCP_Control *dpcp
 )
@@ -131,13 +123,12 @@ RTEMS_INLINE_ROUTINE Priority_Control _DPCP_Get_priority(
 
 
 /**
- * @brief Sets priority of the DPCP control
+ * @brief Sets the ceiling priority of the DPCP control
  *
  * @param[out] dpcp The DPCP control to set the priority of.
  * @param priority_ceiling The new priority for the DPCP Control
  * @param queue_context The Thread queue context
  */
-
 RTEMS_INLINE_ROUTINE void _DPCP_Set_priority(
   DPCP_Control         *dpcp,
   Priority_Control      priority_ceiling,
@@ -154,8 +145,9 @@ RTEMS_INLINE_ROUTINE void _DPCP_Set_priority(
 }
 
 /**
- * @brief Gets the synchronization CPU of the DPCP Control
+ * @brief Gets the synchronization CPU of the DPCP Control, where the task migrates to.
  *
+ * @retval The Per_CPU_Control control block
  */
 RTEMS_INLINE_ROUTINE Per_CPU_Control *_DPCP_Get_CPU(
   DPCP_Control *dpcp
@@ -165,12 +157,12 @@ RTEMS_INLINE_ROUTINE Per_CPU_Control *_DPCP_Get_CPU(
 }
 
 /**
- * @brief Sets the synchronization CPU of the DPCP Control
- * @param dpcp The semaphore control block-
+ * @brief Sets the synchronization CPU of the DPCP Control.
+ *
+ * @param dpcp The semaphore control block
  * @param cpu The synchronization processor it changes to.
  * @param queue_context struct to secure sempahore access
  */
-
 RTEMS_INLINE_ROUTINE void _DPCP_Set_CPU(
   DPCP_Control         *dpcp,
   Per_CPU_Control      *cpu,
@@ -183,7 +175,7 @@ RTEMS_INLINE_ROUTINE void _DPCP_Set_CPU(
 }
 
 /**
- * @brief DPCP ownership of the DPCP control.
+ * @brief Claims ownership of the DPCP control.
  *
  * @param dpcp The DPCP control to claim the ownership of.
  * @param[in, out] executing The currently executing thread.
@@ -193,7 +185,6 @@ RTEMS_INLINE_ROUTINE void _DPCP_Set_CPU(
  * @retval STATUS_MUTEX_CEILING_VIOLATED The wait priority of the executing
  *      thread exceeds the ceiling priority.
  */
-
 RTEMS_INLINE_ROUTINE Status_Control _DPCP_Claim_ownership(
   DPCP_Control         *dpcp,
   Thread_Control       *executing,
@@ -236,7 +227,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Claim_ownership(
  * @retval STATUS_SUCCESSFUL The operation succeeded.
  * @retval STATUS_INVALID_NUMBER The DPCP control is initially locked.
  */
-
 RTEMS_INLINE_ROUTINE Status_Control _DPCP_Initialize(
   DPCP_Control            *dpcp,
   const Scheduler_Control *scheduler,
@@ -257,8 +247,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Initialize(
 /**
  * @brief Waits for the ownership of the DPCP control.
  *
- * Kein "busy wait" wie bei MrsP, der Thread wird "blockiert"
- *
  * @param dpcp The DPCP control to get the ownership of.
  * @param executing The currently executing thread.
  * @param queue_context the thread queue context.
@@ -267,7 +255,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Initialize(
  * @retval STATUS_DEADLOCK A deadlock occured.
  * @retval STATUS_TIMEOUT A timeout occured.
  */
-
 RTEMS_INLINE_ROUTINE Status_Control _DPCP_Wait_for_ownership(
   DPCP_Control         *dpcp,
   Thread_Control       *executing,
@@ -305,7 +292,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Wait_for_ownership(
  * @retval STATUS_UNAVAILABLE The executing thread is already the owner of
  *      the DPCP control.  Seizing it is not possible.
  */
-
 RTEMS_INLINE_ROUTINE Status_Control _DPCP_Seize(
   DPCP_Control         *dpcp,
   Thread_Control       *executing,
@@ -345,7 +331,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Seize(
  * @retval STATUS_SUCCESSFUL The operation succeeded.
  * @retval STATUS_NOT_OWNER The executing thread does not own the DPCP control.
  */
-
 RTEMS_INLINE_ROUTINE Status_Control _DPCP_Surrender(
   DPCP_Control         *dpcp,
   Thread_Control       *executing,
@@ -427,7 +412,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DPCP_Can_destroy(
  * @param[in, out] The dpcp that is about to be destroyed.
  * @param queue_context The thread queue context.
  */
-
 RTEMS_INLINE_ROUTINE void _DPCP_Destroy(
   DPCP_Control         *dpcp,
   Thread_queue_Context *queue_context

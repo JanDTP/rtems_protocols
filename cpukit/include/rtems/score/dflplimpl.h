@@ -27,7 +27,7 @@ extern "C" {
 #define DFLPL_TQ_OPERATIONS &_Thread_queue_Operations_FIFO
 
 /**
- * @brief Migrates Thread to an synchronization processor. While keeping its home_scheduler instance
+ * @brief Migrates Thread to an synchronization processor.
  *
  * @param executing The executing Thread
  * @param dflpl the semaphore control block
@@ -43,6 +43,12 @@ RTEMS_INLINE_ROUTINE void _DFLPL_Migrate(
   _Scheduler_Migrate_To(executing, dflpl->pu, migration_priority);
 }
 
+/**
+ * @brief Migrates Thread back to the application processor.
+ *
+ * @param executing The executing Thread
+ * @param dflpl the semaphore control block
+ */
 RTEMS_INLINE_ROUTINE void _DFLPL_Migrate_Back(
   Thread_Control *executing,
   DFLPL_Control  *dflpl
@@ -57,7 +63,6 @@ RTEMS_INLINE_ROUTINE void _DFLPL_Migrate_Back(
  *
  * @param dflpl The DFLPL control for the operation.
  * @param queue_contest the queue_context of the semphore
- *
  */
 RTEMS_INLINE_ROUTINE void _DFLPL_Acquire_critical(
   DFLPL_Control        *dflpl,
@@ -70,9 +75,9 @@ RTEMS_INLINE_ROUTINE void _DFLPL_Acquire_critical(
 
 /**
  * @brief Releases the lock for the queue_context
+ *
  * @param dflpl The DFLPL control for the operation.
  * @param queue_contest the queue_context of the semphore
- *
  */
 RTEMS_INLINE_ROUTINE void _DFLPL_Release(
   DFLPL_Control        *dflpl,
@@ -84,6 +89,7 @@ RTEMS_INLINE_ROUTINE void _DFLPL_Release(
 
 /**
  * @brief Sets the synchronization CPU of the DFLPL Control
+ *
  * @param dpcp The semaphore control block-
  * @param cpu The synchronization processor it changes to.
  * @param queue_context struct to secure sempahore access
@@ -205,13 +211,14 @@ RTEMS_INLINE_ROUTINE Priority_Control _DFLPL_Get_Min_Priority(
   return min_prio;
 }
 
-/*
- * Inserts the priority of executing into the waiting array, returns 0 if
- * successful 1 otherwise. Causes of error could be:
+/**
+ * @brief Inserts priority into the priority array of the DFLP-L control.
  *
- * - a full queue
- * - a mismatch between free slot and free slot number
- * - a free slot number not between 0 and 15.
+ * @param dflp The DFLP-L control, to get the priority array.
+ * @param executing The currently executing thread.
+ *
+ * @retval 0 The operation succeeded.
+ * @retval 1 No free spot available.
  */
 RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Insert(
   DFLPL_Control  *dflpl,
@@ -244,7 +251,7 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Insert(
 /**
  * @brief Removes priority from the priority array
  *
- * @param dflpl The DFLPL control for the operation.
+ * @param dflpl The DFLP-L control for the operation.
  *
  */
 RTEMS_INLINE_ROUTINE Status_Control _DFLPL_remove(
@@ -276,11 +283,13 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_remove(
 }
 
 /**
- * @brief Adds a new priority to the priority array of the semaphore data structure.
- *  Also changes the priority of the owner in case of a new minimum
-
- * @param dflpl The DFLPL control for the operation.
+ * @brief Adds thread to priority array, triggers priority changes to owner thread.
  *
+ * @param dflpl DFLP-L to get the array form.
+ * @param executing The currently executing thread.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
  */
 RTEMS_INLINE_ROUTINE Status_Control _DFLPL_add(
   DFLPL_Control        *dflpl,
@@ -299,11 +308,10 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_add(
   return RTEMS_SUCCESSFUL;
 }
 
-
 /**
- * @brief Gets the minimum priority of the priority array of the dflpl semaphore
+ * @brief Gets the minimum priority of the priority array of the DFLP-L semaphore
  *
- * @param dflpl The DFLPL control for the operation.
+ * @param dflpl The DFLP-L control for the operation.
  * @param executing The executing task
  * @param queue_context struct to secure sempahore access
  *
@@ -333,7 +341,6 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Claim_ownership(
   _Thread_Dispatch_enable( cpu_self );
   return STATUS_SUCCESSFUL;
 }
-
 
 /**
  * @brief Initializes a DFLPL control. The sychronization processor is set to CPU#1
@@ -381,8 +388,17 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Initialize(
 }
 
 /**
- * Changing owner priority, in case the waiting thread has a higher priority
- * than the owner thread
+ * @brief Waits for the ownership of the DFLP-L control.
+ *
+ * @param[in, out] dflpl The DFLP-L control to get the ownership of.
+ * @param[in, out] executing The currently executing thread.
+ * @param queue_context the thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_MUTEX_CEILING_VIOLATED The wait priority of the
+ *      currently executing thread exceeds the ceiling priority.
+ * @retval STATUS_DEADLOCK A deadlock occured.
+ * @retval STATUS_TIMEOUT A timeout occured.
  */
 RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Wait_for_ownership(
   DFLPL_Control        *dflpl,
@@ -465,7 +481,16 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Seize(
   return status;
 }
 
-/*Surrenders the sempahore. Migrating back and switch owner (which is also migrating) */
+/**
+ * @brief Surrenders the DFLP-L control.
+ *
+ * @param[in, out] dflpl The DFLP-L control to surrender the control of.
+ * @param[in, out] executing The currently executing thread.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_NOT_OWNER The executing thread does not own the DFLP-L control.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Surrender(
   DFLPL_Control        *dflpl,
   Thread_Control       *executing,
@@ -523,6 +548,16 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Surrender(
   return STATUS_SUCCESSFUL;
 }
 
+/**
+ * @brief Checks if the DFLP-L control can be destroyed.
+ *
+ * @param dflpl The DFLP-L control for the operation.
+ *
+ * @retval STATUS_SUCCESSFUL The DFLP-L is currently not used
+ *      and can be destroyed.
+ * @retval STATUS_RESOURCE_IN_USE The DFLP-L control is in use,
+ *      it cannot be destroyed.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Can_destroy(
   DFLPL_Control *dflpl
 )
@@ -533,6 +568,12 @@ RTEMS_INLINE_ROUTINE Status_Control _DFLPL_Can_destroy(
   return STATUS_SUCCESSFUL;
 }
 
+/**
+ * @brief Destroys the DFLP-L control
+ *
+ * @param[in, out] The dflpl that is about to be destroyed.
+ * @param queue_context The thread queue context.
+ */
 RTEMS_INLINE_ROUTINE void _DFLPL_Destroy(
   DFLPL_Control        *dflpl,
   Thread_queue_Context *queue_context

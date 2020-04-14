@@ -78,8 +78,6 @@ THREAD_QUEUE_OBJECT_ASSERT(
 );
 #endif
 
-
-
 rtems_status_code rtems_semaphore_obtain(
   rtems_id        id,
   rtems_option    option_set,

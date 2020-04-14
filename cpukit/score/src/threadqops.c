@@ -1459,7 +1459,6 @@ const Thread_queue_Operations _Thread_queue_Operations_default = {
    */
 };
 
-// const created by mamu
 const Thread_queue_Operations _Thread_queue_Operations_FIFO_PIP = {
   .priority_actions = _Thread_queue_Priority_inherit_priority_actions,
   .enqueue = _Thread_queue_FIFO_enqueue,

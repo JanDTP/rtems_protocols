@@ -46,7 +46,7 @@ extern "C" {
 #define MRSP_TQ_OPERATIONS &_Thread_queue_Operations_priority_inherit
 
 /**
- * @brief Acquires critical accordingt to MrsP.
+ * @brief Acquires critical according to MrsP.
  *
  * @param mrsp The MrsP control for the operation.
  * @param queue_context The thread queue context.
@@ -124,7 +124,7 @@ RTEMS_INLINE_ROUTINE Priority_Control _MRSP_Get_priority(
  * @brief Sets priority of the MrsP control
  *
  * @param[out] mrsp The MrsP control to set the priority of.
- * @param schedulger The corresponding scheduler.
+ * @param scheduler The corresponding scheduler.
  * @param new_priority The new priority for the MrsP control
  */
 RTEMS_INLINE_ROUTINE void _MRSP_Set_priority(
@@ -459,8 +459,7 @@ RTEMS_INLINE_ROUTINE Status_Control _MRSP_Surrender(
 
   if ( _MRSP_Get_owner( mrsp ) != executing ) {
     _ISR_lock_ISR_enable( &queue_context->Lock_context.Lock_context );
-   //return STATUS_NOT_OWNER;
-    return 0;
+   return STATUS_NOT_OWNER;
   }
 
   _MRSP_Acquire_critical( mrsp, queue_context );

@@ -39,6 +39,12 @@ extern "C" {
  */
 #define FMLPL_TQ_OPERATIONS &_Thread_queue_Operations_FIFO
 
+/**
+ * @brief Acquires critical according to FMLP-L.
+ *
+ * @param fmlpl The FMLP-L control for the operation.
+ * @param queue_context The thread queue context.
+ */
 RTEMS_INLINE_ROUTINE void _FMLPL_Acquire_critical(
   FMLPL_Control        *fmlpl,
   Thread_queue_Context *queue_context
@@ -47,6 +53,12 @@ RTEMS_INLINE_ROUTINE void _FMLPL_Acquire_critical(
   _Thread_queue_Acquire_critical( &fmlpl->Wait_queue, queue_context );
 }
 
+/**
+ * @brief Releases according to FMLP-L.
+ *
+ * @param fmlpl The FMLP-L control for the operation.
+ * @param queue_context The thread queue context.
+ */
 RTEMS_INLINE_ROUTINE void _FMLPL_Release(
   FMLPL_Control        *fmlpl,
   Thread_queue_Context *queue_context
@@ -55,6 +67,13 @@ RTEMS_INLINE_ROUTINE void _FMLPL_Release(
   _Thread_queue_Release( &fmlpl->Wait_queue, queue_context );
 }
 
+/**
+ * @brief Gets owner of the FMLP-L control.
+ *
+ * @param fmlpl The FMLP-L control to get the owner from.
+ *
+ * @return The owner of the FMLP-L control.
+ */
 RTEMS_INLINE_ROUTINE Thread_Control *_FMLPL_Get_owner(
   const FMLPL_Control *fmlpl
 )
@@ -62,6 +81,12 @@ RTEMS_INLINE_ROUTINE Thread_Control *_FMLPL_Get_owner(
   return fmlpl->Wait_queue.Queue.owner;
 }
 
+/**
+ * @brief Sets owner of the FMLP-L control.
+ *
+ * @param[out] fmlpl The FMLP-L control to set the owner of.
+ * @param owner The desired new owner for @a fmlpl.
+ */
 RTEMS_INLINE_ROUTINE void _FMLPL_Set_owner(
   FMLPL_Control  *fmlpl,
   Thread_Control *owner
@@ -70,6 +95,14 @@ RTEMS_INLINE_ROUTINE void _FMLPL_Set_owner(
   fmlpl->Wait_queue.Queue.owner = owner;
 }
 
+/**
+ * @brief Gets priority of the FMLP-L control.
+ *
+ * @param fmlpl The fmlpl control to get the priority from.
+ * @param scheduler The corresponding scheduler.
+ *
+ * @return The priority of the FMLP-L control.
+ */
 RTEMS_INLINE_ROUTINE Priority_Control _FMLPL_Get_priority(
   const Thread_Control *the_thread
 )
@@ -84,7 +117,16 @@ RTEMS_INLINE_ROUTINE Priority_Control _FMLPL_Get_priority(
   core_priority = _Priority_Get_priority( &scheduler_node->Wait.Priority );
   return _RTEMS_Priority_From_core( scheduler, core_priority );
 }
-  
+
+/**
+ * @brief Changes the priority of the owner.
+ *
+ * @param new_prio THe new priority of the owner.
+ * @param fmlpl The FMLP-L control for the operation.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Change_Owner_Priority(
   Priority_Control      new_prio,
   FMLPL_Control        *fmlpl,
@@ -105,7 +147,14 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Change_Owner_Priority(
   _Thread_Wait_release_default_critical( owner, &lock_context );
   return RTEMS_SUCCESSFUL;
 }
-  
+
+/**
+ * @brief Gets the minimum priority from priority array of the FMLP-L control block.
+ *
+ * @param fmlpl The FMLP-L control to get the array.
+ *
+ * @retval Minimum priority from the array
+ */
 RTEMS_INLINE_ROUTINE Priority_Control _FMLPL_Get_Min_Priority(
   FMLPL_Control *fmlpl
 )
@@ -123,7 +172,7 @@ RTEMS_INLINE_ROUTINE Priority_Control _FMLPL_Get_Min_Priority(
       }
     }
       
-    return min_prio;
+  return min_prio;
 }
 
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Print_Queue(
@@ -149,13 +198,14 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Print_Queue(
   }
 }
 
-/*
- * Inserts the priority of executing into the waiting array, returns 0 if
- * successful 1 otherwise. Causes of error could be:
+/**
+ * @brief Inserts priority into the priority array of the FMLP-L control.
  *
- * - a full queue
- * - a mismatch between free slot and free slot number
- * - a free slot number not between 0 and 15.
+ * @param fmlpl The FMLP-L control, to get the priority array.
+ * @param executing The currently executing thread.
+ *
+ * @retval 0 The operation succeeded.
+ * @retval 1 No free spot available.
  */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Insert(
   FMLPL_Control  *fmlpl,
@@ -176,10 +226,18 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Insert(
   fmlpl->priority_array[fmlpl->first_free_slot] = _FMLPL_Get_priority( executing );
   if(fmlpl->first_free_slot==15) {
   }
+
   fmlpl->first_free_slot++;
   return 0;
 }
 
+/**
+ * @brief Removes priority from the priority array in the FMLP-L control.
+ *
+ * @param fmlpl The FMLP-L control to get the array.
+ *
+ * @retval 0 The operation succeeded.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_remove(
   FMLPL_Control *fmlpl
 )
@@ -205,13 +263,22 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_remove(
   for( i = 0; i < fs; i++ ) {
     fmlpl->priority_array[i] = fmlpl->priority_array[i+1];
   }
+
   fmlpl->first_free_slot--;
   fs = fmlpl->first_free_slot;
   fmlpl->priority_array[fs] = 0;
-
-    return 0;
+  return 0;
 }
 
+/**
+ * @brief Adds thread to priority array, triggers priority changes to owner thread.
+ *
+ * @param fmlpl FMLP-L to get the array form.
+ * @param executing The currently executing thread.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_add(
   FMLPL_Control        *fmlpl,
   Thread_Control       *executing,
@@ -231,7 +298,17 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_add(
   return RTEMS_SUCCESSFUL;
 }
 
-
+/**
+ * @brief Claims ownership of the FMLP-L control.
+ *
+ * @param fmlpl The FMLP-L control to claim the ownership of.
+ * @param[in, out] executing The currently executing thread.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_MUTEX_CEILING_VIOLATED The wait priority of the executing
+ *      thread exceeds the ceiling priority.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Claim_ownership(
   FMLPL_Control        *fmlpl,
   Thread_Control       *executing,
@@ -257,6 +334,20 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Claim_ownership(
   return RTEMS_SUCCESSFUL;
 }
 
+/**
+ * @brief Initializes a FMLP-L control.
+ *
+ * @param[out] fmlpl The FMLP-L control that is initialized.
+ * @param scheduler The scheduler for the operation.
+ * @param ceiling_priority
+ * @param executing The currently executing thread.  Ignored in this method.
+ * @param initially_locked Indicates whether the FMLP-L control shall be initially
+ *      locked. If it is initially locked, this method returns STATUS_INVALID_NUMBER.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_INVALID_NUMBER The FMLP-L control is initially locked.
+ * @retval STATUS_NO_MEMORY There is not enough memory to allocate.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Initialize(
   FMLPL_Control           *fmlpl,
   const Scheduler_Control *scheduler,
@@ -285,6 +376,19 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Initialize(
   return STATUS_SUCCESSFUL;
 }
 
+/**
+ * @brief Waits for the ownership of the FMLP-L control.
+ *
+ * @param[in, out] fmlpl The FMLP-L control to get the ownership of.
+ * @param[in, out] executing The currently executing thread.
+ * @param queue_context the thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_MUTEX_CEILING_VIOLATED The wait priority of the
+ *      currently executing thread exceeds the ceiling priority.
+ * @retval STATUS_DEADLOCK A deadlock occured.
+ * @retval STATUS_TIMEOUT A timeout occured.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Wait_for_ownership(
   FMLPL_Control        *fmlpl,
   Thread_Control       *executing,
@@ -329,7 +433,20 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Wait_for_ownership(
   return RTEMS_SUCCESSFUL;
 }
 
-
+/**
+ * @brief Seizes the FMLP-L control.
+ *
+ * @param[in, out] fmlpl The FMLP-L control to seize the control of.
+ * @param[in, out] executing The currently executing thread.
+ * @param wait Indicates whether the calling thread is willing to wait.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_MUTEX_CEILING_VIOLATED The wait priority of the executing
+ *      thread exceeds the ceiling priority.
+ * @retval STATUS_UNAVAILABLE The executing thread is already the owner of
+ *      the FMLP-L control.  Seizing it is not possible.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Seize(
   FMLPL_Control        *fmlpl,
   Thread_Control       *executing,
@@ -359,6 +476,16 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Seize(
   return status;
 }
 
+/**
+ * @brief Surrenders the FMLP-L control.
+ *
+ * @param[in, out] fmlpl The FMLP-L control to surrender the control of.
+ * @param[in, out] executing The currently executing thread.
+ * @param queue_context The thread queue context.
+ *
+ * @retval STATUS_SUCCESSFUL The operation succeeded.
+ * @retval STATUS_NOT_OWNER The executing thread does not own the FMLP-L control.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Surrender(
   FMLPL_Control        *fmlpl,
   Thread_Control       *executing,
@@ -407,6 +534,16 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Surrender(
   return RTEMS_SUCCESSFUL;
 }
 
+/**
+ * @brief Checks if the FMLP-L control can be destroyed.
+ *
+ * @param fmlpl The FMLP-L control for the operation.
+ *
+ * @retval STATUS_SUCCESSFUL The FMLP-L is currently not used
+ *      and can be destroyed.
+ * @retval STATUS_RESOURCE_IN_USE The FMLP-L control is in use,
+ *      it cannot be destroyed.
+ */
 RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Can_destroy(
   FMLPL_Control *fmlpl
 )
@@ -418,6 +555,12 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPL_Can_destroy(
   return STATUS_SUCCESSFUL;
 }
 
+/**
+ * @brief Destroys the FMLP-L control
+ *
+ * @param[in, out] The fmlpl that is about to be destroyed.
+ * @param queue_context The thread queue context.
+ */
 RTEMS_INLINE_ROUTINE void _FMLPL_Destroy(
   FMLPL_Control        *fmlpl,
   Thread_queue_Context *queue_context
