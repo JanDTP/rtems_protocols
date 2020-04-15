@@ -280,7 +280,6 @@ RTEMS_INLINE_ROUTINE Status_Control _FMLPS_Initialize(
 {
   uint32_t scheduler_count = _Scheduler_Count;
   uint32_t i;
-
   // this priority should emulate the "non-preemptability" of FMLP-S
   ceiling_priority = 1;
 
